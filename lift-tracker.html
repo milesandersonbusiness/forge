@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Lift Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#080809;
+  --s1:#111114;
+  --s2:#18181d;
+  --s3:#222228;
+  --border:#2e2e38;
+  --accent:#c8f135;
+  --accent-dim:rgba(200,241,53,0.12);
+  --accent-glow:rgba(200,241,53,0.25);
+  --red:#ff4d4d;
+  --blue:#4d9fff;
+  --muted:#5a5a6e;
+  --text:#ededf0;
+  --disp:'Bebas Neue',sans-serif;
+  --body:'DM Sans',sans-serif;
+  --radius:12px;
+}
+html{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100%;overflow-x:hidden;-webkit-tap-highlight-color:transparent;}
+
+/* NAV TABS */
+.nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,8,9,0.92);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:stretch;
+  padding:0 16px;
+  gap:4px;
+}
+.nav-tab{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:14px 8px;
+  font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--muted);cursor:pointer;
+  border-bottom:2px solid transparent;
+  transition:all 0.18s ease;
+  user-select:none;
+}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.nav-tab svg{width:16px;height:16px;flex-shrink:0;}
+
+/* PAGE */
+.page{display:none;padding:20px 16px 100px;max-width:600px;margin:0 auto;animation:fadeUp 0.22s ease;}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* HEADER */
+.page-header{margin-bottom:24px;}
+.page-eyebrow{font-size:10px;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
+.page-title{font-family:var(--disp);font-size:clamp(38px,10vw,56px);line-height:0.95;letter-spacing:0.02em;}
+.page-title span{color:var(--accent);}
+.page-sub{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.5;}
+
+/* TODAY CARD */
+.today-card{
+  background:var(--s2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  margin-bottom:20px;
+}
+.today-header{
+  padding:16px 18px;
+  border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+  background:linear-gradient(135deg,rgba(200,241,53,0.05),transparent);
+}
+.today-day{font-family:var(--disp);font-size:28px;letter-spacing:0.05em;line-height:1;}
+.today-day span{color:var(--accent);}
+.today-badges{display:flex;gap:8px;flex-wrap:wrap;}
+.badge{
+  font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;
+  padding:4px 10px;border-radius:20px;border:1px solid;
+}
+.badge-green{color:var(--accent);border-color:rgba(200,241,53,0.3);background:rgba(200,241,53,0.08);}
+.badge-blue{color:var(--blue);border-color:rgba(77,159,255,0.3);background:rgba(77,159,255,0.08);}
+.badge-red{color:var(--red);border-color:rgba(255,77,77,0.3);background:rgba(255,77,77,0.08);}
+
+/* EXERCISE ROWS */
+.ex-section{padding:4px 0;}
+.ex-label{
+  padding:10px 18px 6px;
+  font-size:10px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);
+  display:flex;align-items:center;gap:8px;
+}
+.ex-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.ex-name-row{
+  padding:10px 18px 4px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.ex-name{font-size:15px;font-weight:600;color:var(--text);}
+.pr-tag{
+  font-size:10px;font-weight:700;letter-spacing:0.1em;
+  background:rgba(200,241,53,0.15);color:var(--accent);
+  border:1px solid rgba(200,241,53,0.3);border-radius:4px;
+  padding:2px 7px;animation:prPulse 1.5s ease infinite;
+}
+@keyframes prPulse{0%,100%{opacity:1;}50%{opacity:0.6;}}
+
+.sets-container{padding:0 18px 12px;}
+.set-row{
+  display:grid;grid-template-columns:44px 1fr 1fr 36px;
+  gap:8px;align-items:center;
+  padding:5px 0;
+  border-bottom:1px solid rgba(46,46,56,0.5);
+}
+.set-num-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.set-row-extra{
+  background:rgba(255,77,77,0.04);
+  border-radius:7px;
+  padding:6px 6px;
+  border-bottom:none !important;
+  margin-bottom:4px;
+  border:1px dashed rgba(255,77,77,0.25) !important;
+}
+.set-row-extra:last-of-type{margin-bottom:0;}
+.extra-tag{
+  font-size:8px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--red);background:rgba(255,77,77,0.12);
+  border:1px solid rgba(255,77,77,0.25);border-radius:3px;
+  padding:1px 4px;line-height:1.4;white-space:nowrap;
+}
+.extra-input{border-color:rgba(255,77,77,0.2) !important;}
+.extra-input:focus{border-color:rgba(255,77,77,0.5) !important;background:rgba(255,77,77,0.04) !important;}
+.set-row:last-child{border-bottom:none;}
+.set-num{
+  font-family:var(--disp);font-size:18px;color:var(--muted);
+  text-align:center;
+}
+.set-input-wrap{position:relative;}
+.set-input-label{
+  position:absolute;top:50%;transform:translateY(-50%);
+  right:10px;font-size:10px;color:var(--muted);pointer-events:none;
+  font-weight:500;
+}
+.set-input{
+  width:100%;background:var(--s3);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-family:var(--body);
+  font-size:15px;font-weight:600;padding:10px 32px 10px 12px;
+  outline:none;transition:border-color 0.15s,background 0.15s;
+  -webkit-appearance:none;appearance:none;
+}
+.set-input:focus{border-color:var(--accent);background:rgba(200,241,53,0.04);}
+.set-input.has-value{border-color:rgba(200,241,53,0.25);}
+.set-input.pr-value{border-color:var(--accent);background:rgba(200,241,53,0.06);}
+.del-set{
+  background:none;border:1px solid var(--border);border-radius:6px;
+  color:var(--muted);font-size:14px;cursor:pointer;
+  width:32px;height:36px;display:flex;align-items:center;justify-content:center;
+  transition:all 0.12s;flex-shrink:0;
+}
+.del-set:hover{border-color:var(--red);color:var(--red);}
+
+.add-set-btn{
+  display:flex;align-items:center;gap:6px;
+  margin:4px 18px 14px;
+  background:none;border:1px dashed var(--border);border-radius:8px;
+  color:var(--muted);font-family:var(--body);font-size:13px;font-weight:500;
+  padding:9px 14px;cursor:pointer;width:calc(100% - 36px);
+  transition:all 0.15s;
+}
+.add-set-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* REST DAY */
+.rest-day-card{
+  background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:48px 24px;text-align:center;
+}
+.rest-day-card h2{font-family:var(--disp);font-size:48px;color:var(--muted);margin-bottom:8px;}
+.rest-day-card p{font-size:13px;color:var(--muted);line-height:1.6;max-width:280px;margin:0 auto;}
+
+/* SAVE STATUS */
+.save-status{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  background:var(--s3);border:1px solid var(--border);border-radius:20px;
+  padding:8px 16px;font-size:12px;color:var(--muted);
+  display:flex;align-items:center;gap:6px;
+  opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:200;
+  white-space:nowrap;
+}
+.save-status.show{opacity:1;}
+.save-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+
+/* CALENDAR PAGE */
+.cal-month-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+}
+.cal-month-title{font-family:var(--disp);font-size:32px;letter-spacing:0.05em;}
+.cal-nav-btn{
+  background:var(--s2);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-size:18px;width:38px;height:38px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all 0.12s;
+}
+.cal-nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+.cal-grid{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  gap:4px;margin-bottom:24px;
+}
+.cal-dow{
+  text-align:center;font-size:10px;font-weight:600;
+  letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);
+  padding:6px 0;
+}
+.cal-day{
+  aspect-ratio:1;border-radius:8px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:13px;font-weight:500;color:var(--muted);
+  background:transparent;position:relative;cursor:default;
+  transition:all 0.12s;gap:3px;
+}
+.cal-day.has-workout{
+  background:var(--s2);border:1px solid var(--border);
+  color:var(--text);cursor:pointer;
+}
+.cal-day.has-workout:hover{border-color:var(--accent);}
+.cal-day.today{background:var(--s3);color:var(--text);}
+.cal-day.today.has-workout{border-color:rgba(200,241,53,0.4);}
+.cal-day.selected{border-color:var(--accent)!important;background:var(--accent-dim)!important;}
+.cal-day-num{font-size:13px;font-weight:600;line-height:1;}
+.cal-day-type{font-size:8px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);line-height:1;}
+.cal-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);}
+
+/* HISTORY PANEL */
+.history-panel{
+  background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;animation:fadeUp 0.2s ease;
+}
+.history-panel-header{
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+  background:linear-gradient(135deg,rgba(200,241,53,0.04),transparent);
+}
+.history-panel-date{font-family:var(--disp);font-size:24px;letter-spacing:0.04em;}
+.history-panel-type{font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);}
+
+/* ACCORDION */
+.accordion-item{border-bottom:1px solid var(--border);}
+.accordion-item:last-child{border-bottom:none;}
+.accordion-header{
+  padding:14px 18px;display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;transition:background 0.12s;user-select:none;
+}
+.accordion-header:hover{background:rgba(255,255,255,0.02);}
+.accordion-left{display:flex;flex-direction:column;gap:3px;}
+.accordion-ex-name{font-size:14px;font-weight:600;}
+.accordion-summary{font-size:12px;color:var(--muted);}
+.accordion-chevron{
+  color:var(--muted);transition:transform 0.2s;font-size:14px;flex-shrink:0;
+}
+.accordion-item.open .accordion-chevron{transform:rotate(180deg);}
+.accordion-body{display:none;padding:0 18px 14px;}
+.accordion-item.open .accordion-body{display:block;}
+.hist-set-row{
+  display:grid;grid-template-columns:28px 1fr 1fr;
+  gap:8px;padding:7px 0;border-bottom:1px solid rgba(46,46,56,0.5);
+  font-size:13px;align-items:center;
+}
+.hist-set-row:last-child{border-bottom:none;}
+.hist-set-num{color:var(--muted);font-family:var(--disp);font-size:16px;}
+.hist-weight{font-weight:600;color:var(--accent);}
+.hist-reps{color:var(--muted);}
+.hist-pr{font-size:10px;font-weight:700;color:var(--accent);background:rgba(200,241,53,0.12);border-radius:3px;padding:1px 5px;margin-left:4px;}
+
+.empty-history{
+  padding:40px 24px;text-align:center;color:var(--muted);font-size:13px;
+}
+
+/* STATS PAGE */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+.stat-card{
+  background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;
+}
+.stat-card-label{font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.stat-card-val{font-family:var(--disp);font-size:32px;color:var(--accent);line-height:1;}
+.stat-card-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+
+.pr-list{background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.pr-list-header{padding:12px 18px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);}
+.pr-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;border-bottom:1px solid var(--border);
+}
+.pr-row:last-child{border-bottom:none;}
+.pr-ex{font-size:14px;font-weight:600;}
+.pr-right{text-align:right;}
+.pr-weight{font-family:var(--disp);font-size:22px;color:var(--accent);}
+.pr-detail{font-size:11px;color:var(--muted);}
+.no-prs{padding:32px;text-align:center;color:var(--muted);font-size:13px;}
+
+/* PLAN TAB */
+.plan-week-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:20px;}
+.plan-day-pill{
+  background:var(--s2);border:1px solid var(--border);border-radius:10px;
+  padding:12px 4px 10px;text-align:center;cursor:pointer;
+  transition:all 0.15s ease;user-select:none;
+}
+.plan-day-pill:hover{border-color:var(--accent);}
+.plan-day-pill.active{border-color:var(--accent);background:var(--accent-dim);}
+.plan-day-pill.rest-pill{opacity:0.6;}
+.plan-day-pill.today-pill{border-color:rgba(200,241,53,0.35);}
+.plan-pill-abbr{font-family:var(--disp);font-size:19px;font-weight:800;line-height:1;}
+.plan-pill-type{font-size:8px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:4px;}
+.plan-day-pill.active .plan-pill-type{color:var(--accent);}
+.plan-pill-dot{width:5px;height:5px;border-radius:50%;background:var(--border);margin:6px auto 0;}
+.plan-day-pill.active .plan-pill-dot{background:var(--accent);}
+.plan-day-pill.today-pill .plan-pill-dot{background:rgba(200,241,53,0.5);}
+
+.plan-detail-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:fadeUp 0.2s ease;}
+.plan-detail-header{
+  padding:18px 20px;border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,rgba(200,241,53,0.05),transparent);
+}
+.plan-detail-day-label{font-size:10px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:5px;}
+.plan-detail-title{font-family:var(--disp);font-size:34px;letter-spacing:0.04em;line-height:1;}
+.plan-detail-muscles{font-size:12px;color:var(--muted);margin-top:5px;}
+.plan-detail-badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;}
+
+.plan-ex-row{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:14px 20px;border-bottom:1px solid var(--border);gap:12px;
+}
+.plan-ex-row:last-child{border-bottom:none;}
+.plan-ex-left{flex:1;}
+.plan-ex-name{font-size:14px;font-weight:600;margin-bottom:3px;}
+.plan-ex-detail{font-size:12px;color:var(--muted);line-height:1.5;}
+.plan-ex-sets{
+  font-family:var(--disp);font-size:26px;color:var(--accent);
+  flex-shrink:0;line-height:1;text-align:right;
+}
+.plan-ex-sets-label{font-size:9px;color:var(--muted);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;font-family:var(--body);}
+
+.plan-rest-card{
+  background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:44px 20px;text-align:center;
+}
+.plan-rest-card h2{font-family:var(--disp);font-size:44px;color:var(--muted);margin-bottom:8px;}
+.plan-rest-card p{font-size:13px;color:var(--muted);line-height:1.6;max-width:260px;margin:0 auto;}
+
+/* TIPS SECTION */
+.tips-section{margin-top:16px;}
+.tips-section-label{
+  font-size:10px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.tips-section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.tip-card{
+  background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;
+  transition:border-color 0.15s;
+}
+.tip-card:last-child{margin-bottom:0;}
+.tip-card:hover{border-color:rgba(200,241,53,0.2);}
+.tip-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.tip-body{}
+.tip-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;line-height:1.3;}
+.tip-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+/* WEIGHT TAB */
+.weight-log-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+.weight-log-card.sunday-active{border-color:rgba(200,241,53,0.35);}
+.weight-input-row{display:flex;gap:10px;align-items:flex-end;margin-top:12px;}
+.weight-field{flex:1;}
+.weight-field label{display:block;font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.weight-input{
+  width:100%;background:var(--s3);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:var(--body);font-size:18px;font-weight:600;
+  padding:11px 14px;outline:none;transition:border-color 0.15s;
+  -webkit-appearance:none;
+}
+.weight-input:focus{border-color:var(--accent);}
+.weight-log-btn{
+  background:var(--accent);color:#000;font-family:var(--disp);font-size:17px;
+  font-weight:700;letter-spacing:0.08em;border:none;border-radius:8px;
+  padding:12px 20px;cursor:pointer;transition:opacity 0.15s;white-space:nowrap;flex-shrink:0;
+}
+.weight-log-btn:hover{opacity:0.85;}
+.weight-not-sunday{
+  background:rgba(200,241,53,0.04);border:1px dashed rgba(200,241,53,0.2);
+  border-radius:8px;padding:12px 16px;margin-top:12px;
+  font-size:12px;color:var(--muted);line-height:1.5;
+}
+.weight-not-sunday strong{color:var(--accent);}
+.weight-current-display{
+  display:flex;align-items:baseline;gap:6px;margin-bottom:4px;
+}
+.weight-current-val{font-family:var(--disp);font-size:52px;color:var(--accent);line-height:1;}
+.weight-current-unit{font-size:16px;color:var(--muted);font-weight:500;}
+.weight-current-label{font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;}
+.weight-delta{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:12px;font-weight:600;padding:3px 8px;border-radius:20px;margin-top:6px;
+}
+.weight-delta.up{background:rgba(105,219,124,0.12);color:#69db7c;border:1px solid rgba(105,219,124,0.25);}
+.weight-delta.down{background:rgba(255,77,77,0.1);color:var(--red);border:1px solid rgba(255,77,77,0.2);}
+.weight-delta.same{background:rgba(90,90,110,0.15);color:var(--muted);border:1px solid var(--border);}
+
+/* CHART */
+.chart-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.chart-title{font-family:var(--disp);font-size:22px;letter-spacing:0.04em;}
+.chart-range-btns{display:flex;gap:4px;}
+.chart-range-btn{
+  background:var(--s3);border:1px solid var(--border);border-radius:6px;
+  color:var(--muted);font-size:11px;font-weight:600;letter-spacing:0.08em;
+  padding:5px 10px;cursor:pointer;transition:all 0.12s;
+}
+.chart-range-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
+.chart-wrap{position:relative;width:100%;height:180px;}
+canvas#weightCanvas{width:100%;height:100%;}
+.chart-empty{text-align:center;padding:48px 0;color:var(--muted);font-size:13px;}
+
+/* HISTORY LIST */
+.weight-history-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.weight-history-header{padding:12px 18px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);}
+.weight-history-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;border-bottom:1px solid var(--border);
+}
+.weight-history-row:last-child{border-bottom:none;}
+.wh-left{display:flex;flex-direction:column;gap:2px;}
+.wh-date{font-size:13px;font-weight:600;}
+.wh-week{font-size:11px;color:var(--muted);}
+.wh-right{display:flex;align-items:center;gap:10px;}
+.wh-val{font-family:var(--disp);font-size:24px;color:var(--accent);}
+.wh-change{font-size:11px;font-weight:600;}
+.wh-change.up{color:#69db7c;}
+.wh-change.down{color:var(--red);}
+.wh-change.same{color:var(--muted);}
+.wh-del{background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);font-size:11px;padding:3px 8px;cursor:pointer;transition:all 0.12s;}
+.wh-del:hover{border-color:var(--red);color:var(--red);}
+.weight-empty{padding:36px;text-align:center;color:var(--muted);font-size:13px;}
+
+/* TIPS BLOCK */
+.tips-block{margin-top:16px;}
+.tips-block-title{
+  font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:10px;padding-left:2px;
+}
+.tip-card{
+  display:flex;gap:14px;align-items:flex-start;
+  background:var(--s2);border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;margin-bottom:8px;
+}
+.tip-card:last-child{margin-bottom:0;}
+.tip-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.tip-body{flex:1;}
+.tip-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.tip-text{font-size:12px;color:var(--muted);line-height:1.6;}
+.ex-target-reps{
+  padding:2px 18px 8px;
+  font-size:11px;color:var(--muted);
+}
+.ex-target-reps strong{color:var(--accent);font-weight:700;}
+
+/* Set done / PR states */
+.set-row-done{
+  background:rgba(200,241,53,0.04);
+  border-radius:7px;
+  border-bottom:none !important;
+  margin-bottom:4px;
+  border:1px solid rgba(200,241,53,0.15) !important;
+  padding:5px 6px;
+}
+.set-row-pr{
+  background:rgba(200,241,53,0.09);
+  border-radius:7px;
+  border-bottom:none !important;
+  margin-bottom:4px;
+  border:1px solid rgba(200,241,53,0.4) !important;
+  padding:5px 6px;
+}
+.set-num-done{color:var(--accent);font-size:14px !important;}
+.set-num-pr{color:var(--accent);font-size:14px !important;}
+.done-value{
+  border-color:rgba(200,241,53,0.3) !important;
+  background:rgba(200,241,53,0.06) !important;
+  color:var(--accent) !important;
+}
+/* keep undone rows with normal bottom border */
+.set-row:not(.set-row-done):not(.set-row-pr):not(.set-row-extra){
+  border-bottom:1px solid rgba(46,46,56,0.5);
+  padding:5px 0;
+}
+.set-row:not(.set-row-done):not(.set-row-pr):not(.set-row-extra):last-of-type{border-bottom:none;}
+.backup-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-top:16px;}
+.backup-title{font-family:var(--disp);font-size:20px;letter-spacing:0.04em;margin-bottom:4px;}
+.backup-sub{font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:16px;}
+.backup-btns{display:flex;gap:10px;flex-wrap:wrap;}
+.backup-btn{
+  flex:1;min-width:120px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--s3);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:var(--body);font-size:13px;font-weight:600;
+  padding:11px 14px;cursor:pointer;transition:all 0.15s;
+}
+.backup-btn:hover{border-color:var(--accent);color:var(--accent);}
+.backup-btn.import-btn:hover{border-color:var(--blue);color:var(--blue);}
+.backup-btn svg{width:15px;height:15px;flex-shrink:0;}
+.import-feedback{
+  margin-top:10px;font-size:12px;padding:8px 12px;border-radius:6px;
+  display:none;
+}
+.import-feedback.success{background:rgba(105,219,124,0.1);color:#69db7c;border:1px solid rgba(105,219,124,0.25);}
+.import-feedback.error{background:rgba(255,77,77,0.08);color:var(--red);border:1px solid rgba(255,77,77,0.2);}
+
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-tab active" onclick="switchTab('today')" id="tab-today">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Today
+  </div>
+  <div class="nav-tab" onclick="switchTab('calendar')" id="tab-calendar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Calendar
+  </div>
+  <div class="nav-tab" onclick="switchTab('prs')" id="tab-prs">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+    PRs
+  </div>
+  <div class="nav-tab" onclick="switchTab('plan')" id="tab-plan">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+    Plan
+  </div>
+  <div class="nav-tab" onclick="switchTab('weight')" id="tab-weight">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    Weight
+  </div>
+</nav>
+
+<!-- TODAY TAB -->
+<div class="page active" id="page-today">
+  <div class="page-header">
+    <div class="page-eyebrow">Lift Tracker</div>
+    <div class="page-title" id="today-title">LOADING</div>
+    <div class="page-sub" id="today-date"></div>
+  </div>
+  <div id="today-content"></div>
+</div>
+
+<!-- CALENDAR TAB -->
+<div class="page" id="page-calendar">
+  <div class="page-header">
+    <div class="page-eyebrow">Workout History</div>
+    <div class="page-title">CALENDAR</div>
+  </div>
+  <div class="cal-month-nav">
+    <button class="cal-nav-btn" onclick="changeMonth(-1)">&#8592;</button>
+    <div class="cal-month-title" id="cal-month-label"></div>
+    <button class="cal-nav-btn" onclick="changeMonth(1)">&#8594;</button>
+  </div>
+  <div class="cal-grid" id="cal-grid"></div>
+  <div id="history-panel"></div>
+</div>
+
+<!-- PRs TAB -->
+<div class="page" id="page-prs">
+  <div class="page-header">
+    <div class="page-eyebrow">Personal Records</div>
+    <div class="page-title">YOUR <span>PRs</span></div>
+    <div class="page-sub">Best weight logged per exercise, all time.</div>
+  </div>
+  <div class="stats-grid" id="stats-grid"></div>
+  <div class="pr-list" id="pr-list"></div>
+</div>
+
+<!-- PLAN TAB -->
+<div class="page" id="page-plan">
+  <div class="page-header">
+    <div class="page-eyebrow">Weekly Split</div>
+    <div class="page-title">THE <span style="color:var(--accent)">PLAN</span></div>
+    <div class="page-sub">Push / Pull / Push / Pull / Push / Legs — tap any day to see the full workout.</div>
+  </div>
+  <div id="plan-week-strip"></div>
+  <div id="plan-day-detail"></div>
+</div>
+
+<!-- WEIGHT TAB -->
+<div class="page" id="page-weight">
+  <div class="page-header">
+    <div class="page-eyebrow">Bodyweight Tracker</div>
+    <div class="page-title">BODY <span style="color:var(--accent)">WEIGHT</span></div>
+    <div class="page-sub">Log every Sunday. Consistency is what makes the trend visible.</div>
+  </div>
+  <div id="weight-log-area"></div>
+  <div id="weight-chart-area"></div>
+  <div id="weight-history-area"></div>
+  <div id="backup-area"></div>
+</div>
+
+<div class="save-status" id="save-status">
+  <div class="save-dot"></div>
+  <span>Saved</span>
+</div>
+
+<script>
+// ── WORKOUT PLAN ──────────────────────────────────────────────
+const PLAN = {
+  1: { // Monday
+    name: 'PUSH A', type: 'Push A',
+    exercises: [
+      { name: 'Barbell Bench Press', sets: 5, reps: '4–6' },
+      { name: 'Standing Overhead Barbell Press', sets: 4, reps: '6–8' },
+      { name: 'Close-Grip Bench Press', sets: 3, reps: '8–10' },
+      { name: 'Barbell Skull Crushers', sets: 3, reps: '10–12' },
+      { name: 'Push-Ups', sets: 3, reps: '10–15' },
+    ]
+  },
+  2: { // Tuesday
+    name: 'PULL A', type: 'Pull A',
+    exercises: [
+      { name: 'Barbell Deadlift', sets: 4, reps: '4–6' },
+      { name: 'Barbell Bent-Over Row (overhand)', sets: 4, reps: '6–8' },
+      { name: 'Barbell Upright Row', sets: 3, reps: '10–12' },
+      { name: 'Barbell Bicep Curl', sets: 3, reps: '8–10' },
+      { name: 'Barbell Pendlay Row', sets: 3, reps: '8–10' },
+      { name: 'Barbell Reverse Curl', sets: 3, reps: '10–12' },
+    ]
+  },
+  3: { // Wednesday
+    name: 'PUSH B', type: 'Push B',
+    exercises: [
+      { name: 'Barbell Floor Press', sets: 4, reps: '8–10' },
+      { name: 'Seated Overhead Barbell Press', sets: 4, reps: '8–10' },
+      { name: 'Barbell Front Raise', sets: 3, reps: '12–15' },
+      { name: 'Barbell Skull Crushers', sets: 3, reps: '12–15' },
+      { name: 'Diamond Push-Ups', sets: 3, reps: 'Failure' },
+    ]
+  },
+  4: { // Thursday
+    name: 'PULL B', type: 'Pull B',
+    exercises: [
+      { name: 'Barbell Bent-Over Row (underhand)', sets: 4, reps: '8–10' },
+      { name: 'Romanian Deadlift', sets: 3, reps: '10–12' },
+      { name: 'Barbell Shrug', sets: 4, reps: '12–15' },
+      { name: 'Barbell Drag Curl', sets: 3, reps: '10–12' },
+      { name: 'Barbell 21s', sets: 3, reps: '21' },
+      { name: 'Barbell Wrist Curl (seated)', sets: 3, reps: '15–20' },
+    ]
+  },
+  5: { // Friday
+    name: 'PUSH C', type: 'Push C',
+    exercises: [
+      { name: 'Barbell Bench Press (rep focus)', sets: 3, reps: '10–12' },
+      { name: 'Overhead Barbell Press (push press)', sets: 3, reps: '6–8' },
+      { name: 'Barbell Bench Close-Grip Paused', sets: 3, reps: '8–10' },
+      { name: 'Barbell Skull Crushers (drop set)', sets: 3, reps: '10–12' },
+      { name: 'Push-Up Burnout', sets: 3, reps: 'Max' },
+    ]
+  },
+  6: { // Saturday
+    name: 'LEGS', type: 'Legs',
+    exercises: [
+      { name: 'Barbell Hack Squat', sets: 4, reps: '6–8' },
+      { name: 'Romanian Deadlift', sets: 3, reps: '8–10' },
+      { name: 'Leg Extensions', sets: 3, reps: '12–15' },
+      { name: 'Bulgarian Split Squat', sets: 3, reps: '8–10 each' },
+      { name: 'Standing Calf Raises', sets: 4, reps: '15–20' },
+    ]
+  },
+  0: null // Sunday = rest
+};
+
+// ── STORAGE ───────────────────────────────────────────────────
+function getStorage() {
+  try { return JSON.parse(localStorage.getItem('liftData') || '{}'); }
+  catch(e) { return {}; }
+}
+function saveStorage(data) {
+  try { localStorage.setItem('liftData', JSON.stringify(data)); }
+  catch(e) {}
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function dateKey(y,m,d) {
+  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+function getDOW(key) {
+  const [y,m,d] = key.split('-').map(Number);
+  return new Date(y, m-1, d).getDay();
+}
+function formatDateNice(key) {
+  const [y,m,d] = key.split('-').map(Number);
+  return new Date(y,m-1,d).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+function showSaved() {
+  const el = document.getElementById('save-status');
+  el.classList.add('show');
+  clearTimeout(window._saveTimer);
+  window._saveTimer = setTimeout(()=>el.classList.remove('show'), 1800);
+}
+
+// ── GET PR FOR EXERCISE ───────────────────────────────────────
+function getPR(exName) {
+  const data = getStorage();
+  let best = null;
+  for (const key of Object.keys(data)) {
+    const day = data[key];
+    if (!day.exercises) continue;
+    for (const ex of day.exercises) {
+      if (ex.name !== exName) continue;
+      for (const set of ex.sets) {
+        const w = parseFloat(set.weight);
+        if (!isNaN(w) && w > 0 && (best === null || w > best.weight)) {
+          best = { weight: w, reps: set.reps, date: key };
+        }
+      }
+    }
+  }
+  return best;
+}
+
+function getAllPRs() {
+  const data = getStorage();
+  const prs = {};
+  for (const key of Object.keys(data)) {
+    const day = data[key];
+    if (!day.exercises) continue;
+    for (const ex of day.exercises) {
+      for (const set of ex.sets) {
+        const w = parseFloat(set.weight);
+        if (!isNaN(w) && w > 0) {
+          if (!prs[ex.name] || w > prs[ex.name].weight) {
+            prs[ex.name] = { weight: w, reps: set.reps, date: key };
+          }
+        }
+      }
+    }
+  }
+  return prs;
+}
+
+// ── TODAY TAB ─────────────────────────────────────────────────
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const SHORT = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+
+function renderToday() {
+  const now = new Date();
+  const dow = now.getDay();
+  const key = todayKey();
+  const workout = PLAN[dow];
+
+  document.getElementById('today-date').textContent =
+    now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  if (!workout) {
+    document.getElementById('today-title').innerHTML = `REST <span>DAY</span>`;
+    document.getElementById('today-content').innerHTML = `
+      <div class="rest-day-card">
+        <h2>SUNDAY</h2>
+        <p>Recovery day. Walk, stretch, eat your protein, drink water, sleep 8+ hours. Creatine still — take it.</p>
+      </div>
+      <div class="tips-block" style="margin-top:16px">
+        <div class="tips-block-title">REST DAY CHECKLIST</div>
+        ${[
+          { icon:'😴', title:'Sleep 8–9 hours', body:'Tonight\'s sleep is when your body releases HGH and repairs the muscle you broke down all week. This is not optional if size is your goal.' },
+          { icon:'🥩', title:'Hit your protein anyway', body:'150–175g of protein even on rest days. Muscle repair happens 24–48 hrs after training — your body still needs the building blocks today.' },
+          { icon:'💧', title:'3L+ of water', body:'Creatine pulls water into muscle cells. Stay hydrated all day, not just during workouts. Dehydration tanks recovery speed.' },
+          { icon:'🧘', title:'Stretch your chest & hips', body:'After 6 days of heavy pressing your chest will be tight. Doorway chest stretch, hip flexor stretch, and thoracic spine rotations take 10 minutes and make Monday feel way better.' },
+          { icon:'🚶', title:'Light walk (20–30 min)', body:'Active recovery increases blood flow to muscles without adding fatigue. A walk is better than sitting all day. Don\'t run, don\'t lift — just move.' },
+          { icon:'🔬', title:'Take your creatine', body:'5g daily, every day including rest days. Creatine works by keeping muscle cells saturated — skipping days drops saturation levels and reduces its effectiveness.' },
+        ].map(t => `<div class="tip-card"><div class="tip-icon">${t.icon}</div><div class="tip-body"><div class="tip-title">${t.title}</div><div class="tip-text">${t.body}</div></div></div>`).join('')}
+      </div>`;
+    return;
+  }
+
+  document.getElementById('today-title').innerHTML =
+    `<span>${workout.type.split(' ')[0]}</span> ${workout.type.split(' ').slice(1).join(' ')}`;
+
+  const data = getStorage();
+  if (!data[key]) {
+    data[key] = { type: workout.type, exercises: workout.exercises.map(ex => ({
+      name: ex.name,
+      sets: Array.from({length: ex.sets}, () => ({ weight: '', reps: '' }))
+    }))};
+    saveStorage(data);
+  }
+
+  const dayData = data[key];
+  let html = `<div class="today-card">
+    <div class="today-header">
+      <div class="today-day"><span>${SHORT[dow]}</span> — ${workout.name}</div>
+      <div class="today-badges">
+        <span class="badge badge-green">${workout.exercises.length} exercises</span>
+        <span class="badge badge-blue">${workout.type}</span>
+      </div>
+    </div>
+    <div class="ex-section">`;
+
+  dayData.exercises.forEach((ex, ei) => {
+    const pr = getPR(ex.name);
+    const assignedSets = workout.exercises[ei]?.sets ?? ex.sets.length;
+    const targetReps = workout.exercises[ei]?.reps ?? '';
+    html += `<div class="ex-label">${ei+1}</div>
+      <div class="ex-name-row">
+        <div class="ex-name">${ex.name}</div>
+        ${pr ? `<div class="pr-tag">PR: ${pr.weight}lbs × ${pr.reps}</div>` : ''}
+      </div>
+      ${targetReps ? `<div class="ex-target-reps">Target: <strong>${targetReps} reps</strong></div>` : ''}
+      <div class="sets-container" id="sets-${ei}">`;
+    ex.sets.forEach((set, si) => {
+      const isPR = pr && parseFloat(set.weight) > pr.weight;
+      const isExtra = si >= assignedSets;
+      const isDone = set.weight && set.reps;
+      let rowClass = 'set-row';
+      if (isExtra) rowClass += ' set-row-extra';
+      else if (isDone) rowClass += (isPR ? ' set-row-pr' : ' set-row-done');
+      html += `<div class="${rowClass}" id="setrow-${ei}-${si}">
+        <div class="set-num-wrap">
+          <div class="set-num ${isDone && !isExtra ? (isPR?'set-num-pr':'set-num-done') : ''}">${isDone ? (isPR ? '★' : '✓') : si+1}</div>
+          ${isExtra ? `<div class="extra-tag">EXTRA</div>` : ''}
+        </div>
+        <div class="set-input-wrap">
+          <input class="set-input ${set.weight ? (isPR?'pr-value': isDone?'done-value':'has-value') : ''}${isExtra?' extra-input':''}"
+            type="number" inputmode="decimal" placeholder="0"
+            value="${set.weight}"
+            onchange="updateSet('${key}',${ei},${si},'weight',this.value)"
+            oninput="updateSet('${key}',${ei},${si},'weight',this.value)">
+          <span class="set-input-label">lbs</span>
+        </div>
+        <div class="set-input-wrap">
+          <input class="set-input ${set.reps ? (isDone?'done-value':'has-value') : ''}${isExtra?' extra-input':''}"
+            type="number" inputmode="numeric" placeholder="${targetReps||'0'}"
+            value="${set.reps}"
+            onchange="updateSet('${key}',${ei},${si},'reps',this.value)"
+            oninput="updateSet('${key}',${ei},${si},'reps',this.value)">
+          <span class="set-input-label">reps</span>
+        </div>
+        <button class="del-set" onclick="deleteSet('${key}',${ei},${si})">✕</button>
+      </div>`;
+    });
+    html += `</div>
+      <button class="add-set-btn" onclick="addSet('${key}',${ei})">+ Add set</button>`;
+  });
+
+  html += `</div></div>`;
+
+  // Per-day tips
+  const DAY_TIPS = {
+    1: [ // Monday - Push A
+      { icon:'🏋️', title:'Start heavy, finish strong', body:'Bench press is your opener — don\'t burn out on warm-up sets. Do 2 light warm-ups then jump to your working weight. Save energy for the last set.' },
+      { icon:'💨', title:'Rest fully between compounds', body:'3 minutes between bench and OHP sets isn\'t too long — it\'s necessary. Rushing rest on heavy compound lifts kills your strength on the next set.' },
+      { icon:'🔒', title:'Brace your core on OHP', body:'Standing press with a loose core leads to lower back strain. Take a big breath, brace like you\'re about to get punched, then press. Every single rep.' },
+      { icon:'📈', title:'Progressive overload check', body:'If you hit the top of your rep range on all sets last Monday, add 2.5 lbs today. Even small jumps compound into big strength gains over months.' },
+    ],
+    2: [ // Tuesday - Pull A
+      { icon:'⚡', title:'Deadlift is your most important lift', body:'More muscle groups, more weight, more growth stimulus than anything else. Warm up thoroughly — 2–3 light sets — before going heavy. Focus on bracing, not speed.' },
+      { icon:'🦺', title:'Protect your lower back', body:'On deadlifts and rows: neutral spine the entire rep. No rounding at the top to squeeze out one more. A back injury sets you back months.' },
+      { icon:'🤜', title:'Squeeze on every row', body:'Rows only work if you actually contract your back at the top. Pull your elbows behind your body and hold for half a second. Feel the squeeze, don\'t just move the bar.' },
+      { icon:'💪', title:'Reverse curls will feel awkward at first', body:'Your brachioradialis is probably underdeveloped. Go lighter than you think, focus on form, and expect soreness in your forearm the next day — that\'s it working.' },
+    ],
+    3: [ // Wednesday - Push B
+      { icon:'🛡️', title:'Floor press form tip', body:'Let your triceps touch the floor briefly each rep — don\'t bounce. The pause eliminates momentum and forces your muscles to restart the movement from zero.' },
+      { icon:'🎯', title:'Mind-muscle connection day', body:'Push B is your volume day — go slightly lighter and really focus on feeling the muscle work. Slow the eccentric (lowering) to 2–3 seconds on each rep.' },
+      { icon:'😤', title:'Diamond push-up finisher', body:'Go to true failure on the last set. This is your burnout — you\'re supposed to be uncomfortable. Rest only 60 seconds between sets to keep the pump going.' },
+      { icon:'💧', title:'Stay hydrated mid-session', body:'You\'re 3 days into the week. Creatine needs water to work — sip between sets, especially if you\'re sweating. Dehydration hurts performance noticeably.' },
+    ],
+    4: [ // Thursday - Pull B
+      { icon:'🔁', title:'Underhand rows hit differently', body:'Supinated grip (palms up) on bent-over rows shifts more load to your lower lats and biceps. It\'s not easier — it\'s a different stimulus. Squeeze hard at the top.' },
+      { icon:'🏔️', title:'Shrugs: quality over weight', body:'Don\'t load the bar so heavy you can only do tiny shrugs. Full range — let the traps fully stretch at the bottom, hold at the top. Traps respond to controlled reps.' },
+      { icon:'🔥', title:'Barbell 21s will destroy your biceps', body:'That\'s the point. Do them last so your biceps are already fatigued. 7 bottom, 7 top, 7 full — no rest between, no cheating. Best arm pump of the week.' },
+      { icon:'📊', title:'Volume check', body:'Thursday is your second pull day. If your back is still sore from Tuesday, that\'s fine — train through it. If it\'s sharp pain, reduce weight. Soreness vs injury is an important distinction.' },
+    ],
+    5: [ // Friday - Push C
+      { icon:'🎉', title:'Last push day of the week', body:'Push C is volume and pump focused — not max effort. Use weights that let you hit the top of the rep range with 1–2 reps left in the tank on most sets.' },
+      { icon:'💥', title:'Push press technique', body:'Slight dip of the knees, then drive up through the bar explosively. The leg drive gets the bar moving — your shoulders and triceps finish it. Lets you go heavier than strict press.' },
+      { icon:'🏁', title:'Push-up burnout is mandatory', body:'End every Friday with 3 sets of max push-ups. This is your weekly benchmark — track how many you get. If the number goes up week to week, you\'re getting stronger.' },
+      { icon:'🍽️', title:'Eat big tonight', body:'6 days of training hits harder than you think. Tonight eat a big protein and carb meal. Your body is primed to absorb nutrients and you have a rest day tomorrow — maximize it.' },
+    ],
+    6: [ // Saturday - Legs
+      { icon:'🦵', title:'Hack squat setup matters', body:'Bar sits behind your heels, feet shoulder-width. The narrower your stance the more quad-dominant it is. Keep your chest up, sit straight down. If you fail, step forward and drop it — no danger.' },
+      { icon:'⚠️', title:'Bulgarian split squat — start light', body:'Seriously. Even 45 lbs total feels brutal when you first learn this. The balance takes 1–2 sessions to dial in. Don\'t ego lift here — master the movement first.' },
+      { icon:'🧠', title:'Leg training mindset', body:'Legs are hard because the muscles are big and the compound lifts are exhausting. Push through the discomfort — this is the one day a week that builds your base and makes everything else stronger.' },
+      { icon:'🐄', title:'Calves need full range', body:'Most people do calf raises wrong — they bounce at the bottom and skip the stretch. Pause at the very bottom for 1 second, drive all the way up, pause at the top. It\'s humbling but it works.' },
+    ],
+  };
+
+  const tips = DAY_TIPS[dow] || [];
+  if (tips.length) {
+    html += `<div class="tips-block">
+      <div class="tips-block-title">TODAY'S FOCUS TIPS</div>
+      ${tips.map(t=>`<div class="tip-card"><div class="tip-icon">${t.icon}</div><div class="tip-body"><div class="tip-title">${t.title}</div><div class="tip-text">${t.body}</div></div></div>`).join('')}
+    </div>`;
+  }
+
+  document.getElementById('today-content').innerHTML = html;
+}
+
+function updateSet(key, ei, si, field, val) {
+  const data = getStorage();
+  if (!data[key]?.exercises?.[ei]?.sets?.[si]) return;
+  data[key].exercises[ei].sets[si][field] = val;
+  saveStorage(data);
+  showSaved();
+  refreshSetRow(key, ei, si, data);
+}
+
+function refreshSetRow(key, ei, si, data) {
+  if (!data) data = getStorage();
+  const row = document.getElementById(`setrow-${ei}-${si}`);
+  if (!row) return;
+
+  const set = data[key]?.exercises?.[ei]?.sets?.[si];
+  if (!set) return;
+
+  const exName = data[key].exercises[ei].name;
+  const pr = getPR(exName);
+  const isDone = !!(set.weight && set.reps);
+  const isPR = isDone && pr && parseFloat(set.weight) > pr.weight;
+  const isExtra = row.classList.contains('set-row-extra');
+
+  // Update row class
+  if (!isExtra) {
+    row.classList.remove('set-row-done', 'set-row-pr');
+    if (isPR) row.classList.add('set-row-pr');
+    else if (isDone) row.classList.add('set-row-done');
+  }
+
+  // Update set number / icon
+  const numEl = row.querySelector('.set-num');
+  if (numEl && !isExtra) {
+    numEl.className = `set-num ${isPR ? 'set-num-pr' : isDone ? 'set-num-done' : ''}`;
+    numEl.textContent = isPR ? '★' : isDone ? '✓' : String(si + 1);
+  }
+
+  // Update input classes
+  const inputs = row.querySelectorAll('.set-input');
+  const [wtInput, rpInput] = inputs;
+  if (wtInput) {
+    wtInput.classList.remove('has-value', 'done-value', 'pr-value');
+    if (set.weight) {
+      if (isPR) wtInput.classList.add('pr-value');
+      else if (isDone) wtInput.classList.add('done-value');
+      else wtInput.classList.add('has-value');
+    }
+  }
+  if (rpInput) {
+    rpInput.classList.remove('has-value', 'done-value');
+    if (set.reps) rpInput.classList.add(isDone ? 'done-value' : 'has-value');
+  }
+}
+
+function addSet(key, ei) {
+  const data = getStorage();
+  if (!data[key]?.exercises?.[ei]) return;
+  data[key].exercises[ei].sets.push({ weight: '', reps: '' });
+  saveStorage(data);
+  renderToday();
+}
+
+function deleteSet(key, ei, si) {
+  const data = getStorage();
+  if (!data[key]?.exercises?.[ei]?.sets) return;
+  if (data[key].exercises[ei].sets.length <= 1) return;
+  data[key].exercises[ei].sets.splice(si, 1);
+  saveStorage(data);
+  showSaved();
+  renderToday();
+}
+
+// ── CALENDAR TAB ──────────────────────────────────────────────
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let selectedCalDay = null;
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function renderCalendar() {
+  document.getElementById('cal-month-label').textContent = `${MONTHS[calMonth]} ${calYear}`;
+  const data = getStorage();
+  const today = todayKey();
+
+  const firstDOW = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+
+  let html = '';
+  ['S','M','T','W','T','F','S'].forEach(d => {
+    html += `<div class="cal-dow">${d}</div>`;
+  });
+
+  for (let i = 0; i < firstDOW; i++) html += `<div></div>`;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = dateKey(calYear, calMonth, d);
+    const hasData = !!(data[key]?.exercises?.some(ex => ex.sets.some(s => s.weight)));
+    const isToday = key === today;
+    const isSelected = key === selectedCalDay;
+    const type = data[key]?.type || '';
+
+    let cls = 'cal-day';
+    if (hasData) cls += ' has-workout';
+    if (isToday) cls += ' today';
+    if (isSelected) cls += ' selected';
+
+    const onclick = hasData ? `onclick="selectCalDay('${key}')"` : '';
+    html += `<div class="${cls}" ${onclick}>
+      <div class="cal-day-num">${d}</div>
+      ${hasData ? `<div class="cal-day-type">${type.split(' ')[0]}</div><div class="cal-dot"></div>` : ''}
+    </div>`;
+  }
+
+  document.getElementById('cal-grid').innerHTML = html;
+  renderHistoryPanel();
+}
+
+function selectCalDay(key) {
+  selectedCalDay = selectedCalDay === key ? null : key;
+  renderCalendar();
+}
+
+function renderHistoryPanel() {
+  const panel = document.getElementById('history-panel');
+  if (!selectedCalDay) { panel.innerHTML = ''; return; }
+
+  const data = getStorage();
+  const day = data[selectedCalDay];
+  if (!day) { panel.innerHTML = ''; return; }
+
+  const prs = getAllPRs();
+  let html = `<div class="history-panel">
+    <div class="history-panel-header">
+      <div class="history-panel-date">${formatDateNice(selectedCalDay)}</div>
+      <div class="history-panel-type">${day.type || ''}</div>
+    </div>`;
+
+  if (!day.exercises || !day.exercises.length) {
+    html += `<div class="empty-history">No exercises logged for this day.</div>`;
+  } else {
+    day.exercises.forEach((ex, i) => {
+      const filledSets = ex.sets.filter(s => s.weight || s.reps);
+      if (!filledSets.length) return;
+
+      const bestWeight = Math.max(...filledSets.map(s=>parseFloat(s.weight)||0));
+      const totalVol = filledSets.reduce((a,s)=>a+(parseFloat(s.weight)||0)*(parseInt(s.reps)||0),0);
+      const isPR = prs[ex.name] && bestWeight >= prs[ex.name].weight && selectedCalDay === prs[ex.name].date;
+
+      html += `<div class="accordion-item" id="acc-${i}">
+        <div class="accordion-header" onclick="toggleAcc(${i})">
+          <div class="accordion-left">
+            <div class="accordion-ex-name">${ex.name}${isPR?'<span class="hist-pr">PR</span>':''}</div>
+            <div class="accordion-summary">${filledSets.length} sets · best ${bestWeight}lbs · ${totalVol.toLocaleString()} lbs total vol</div>
+          </div>
+          <div class="accordion-chevron">▼</div>
+        </div>
+        <div class="accordion-body">`;
+
+      filledSets.forEach((set, si) => {
+        const isSetPR = isPR && parseFloat(set.weight) >= bestWeight;
+        html += `<div class="hist-set-row">
+          <div class="hist-set-num">${si+1}</div>
+          <div class="hist-weight">${set.weight || '—'} lbs${isSetPR?'<span class="hist-pr">PR</span>':''}</div>
+          <div class="hist-reps">${set.reps || '—'} reps</div>
+        </div>`;
+      });
+
+      html += `</div></div>`;
+    });
+  }
+
+  html += `</div>`;
+  panel.innerHTML = html;
+}
+
+function toggleAcc(i) {
+  const el = document.getElementById(`acc-${i}`);
+  el.classList.toggle('open');
+}
+
+function changeMonth(dir) {
+  calMonth += dir;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  selectedCalDay = null;
+  renderCalendar();
+}
+
+// ── PRs TAB ───────────────────────────────────────────────────
+function renderPRs() {
+  const data = getStorage();
+  const prs = getAllPRs();
+  const keys = Object.keys(data);
+  const workoutDays = keys.filter(k => data[k]?.exercises?.some(e=>e.sets.some(s=>s.weight)));
+
+  // stats
+  const totalSets = workoutDays.reduce((a,k)=>
+    a+(data[k].exercises||[]).reduce((b,e)=>b+e.sets.filter(s=>s.weight).length,0),0);
+  const totalVol = workoutDays.reduce((a,k)=>
+    a+(data[k].exercises||[]).reduce((b,e)=>
+      b+e.sets.reduce((c,s)=>c+(parseFloat(s.weight)||0)*(parseInt(s.reps)||0),0),0),0);
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-card-label">Workouts</div>
+      <div class="stat-card-val">${workoutDays.length}</div>
+      <div class="stat-card-sub">days logged</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Total Sets</div>
+      <div class="stat-card-val">${totalSets}</div>
+      <div class="stat-card-sub">all time</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Total Volume</div>
+      <div class="stat-card-val">${totalVol >= 1000 ? (totalVol/1000).toFixed(1)+'k' : totalVol}</div>
+      <div class="stat-card-sub">lbs lifted</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Exercises</div>
+      <div class="stat-card-val">${Object.keys(prs).length}</div>
+      <div class="stat-card-sub">tracked</div>
+    </div>`;
+
+  const prKeys = Object.keys(prs).sort((a,b) => prs[b].weight - prs[a].weight);
+  if (!prKeys.length) {
+    document.getElementById('pr-list').innerHTML = `
+      <div class="pr-list-header">Personal Records</div>
+      <div class="no-prs">No PRs yet — start logging sets on the Today tab 💪</div>`;
+    return;
+  }
+
+  let html = `<div class="pr-list-header">Personal Records — ${prKeys.length} lifts</div>`;
+  prKeys.forEach(ex => {
+    const pr = prs[ex];
+    html += `<div class="pr-row">
+      <div class="pr-ex">${ex}</div>
+      <div class="pr-right">
+        <div class="pr-weight">${pr.weight} lbs</div>
+        <div class="pr-detail">${pr.reps} reps · ${formatDateNice(pr.date)}</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('pr-list').innerHTML = html;
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(`page-${tab}`).classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  if (tab === 'calendar') renderCalendar();
+  if (tab === 'prs') renderPRs();
+  if (tab === 'plan') renderPlanTab();
+  if (tab === 'weight') renderWeightTab();
+}
+
+// ── WEIGHT TAB ────────────────────────────────────────────────
+let chartRange = 'all';
+
+function getWeightData() {
+  try { return JSON.parse(localStorage.getItem('weightData') || '[]'); }
+  catch(e) { return []; }
+}
+function saveWeightData(d) {
+  try { localStorage.setItem('weightData', JSON.stringify(d)); }
+  catch(e) {}
+}
+
+function renderWeightTab() {
+  const now = new Date();
+  const isSunday = now.getDay() === 0;
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const entries = getWeightData().sort((a,b)=>b.date.localeCompare(a.date));
+  const latest = entries[0] || null;
+  const prev = entries[1] || null;
+
+  // delta calc
+  let deltaHTML = '';
+  if (latest && prev) {
+    const diff = (parseFloat(latest.weight) - parseFloat(prev.weight)).toFixed(1);
+    const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
+    const sign = diff > 0 ? '+' : '';
+    deltaHTML = `<div class="weight-delta ${cls}">${sign}${diff} lbs since last week</div>`;
+  }
+
+  // Log area
+  const alreadyLoggedToday = entries.some(e=>e.date===todayStr);
+  let logHTML = `<div class="weight-log-card ${isSunday?'sunday-active':''}">`;
+
+  if (latest) {
+    logHTML += `<div class="weight-current-label">Current Weight</div>
+      <div class="weight-current-display">
+        <div class="weight-current-val">${latest.weight}</div>
+        <div class="weight-current-unit">lbs</div>
+      </div>
+      ${deltaHTML}
+      <div style="margin-top:4px;font-size:11px;color:var(--muted)">Logged ${formatDateNice(latest.date)}</div>`;
+  } else {
+    logHTML += `<div style="font-size:14px;font-weight:600;margin-bottom:4px;">No entries yet</div>
+      <div style="font-size:12px;color:var(--muted);">Log your first weigh-in below to start tracking.</div>`;
+  }
+
+  if (isSunday && !alreadyLoggedToday) {
+    logHTML += `<div class="weight-input-row">
+      <div class="weight-field">
+        <label>Today's Weight</label>
+        <input class="weight-input" type="number" inputmode="decimal" id="weightInput" placeholder="150.0" step="0.1">
+      </div>
+      <button class="weight-log-btn" onclick="logWeight()">LOG</button>
+    </div>`;
+  } else if (isSunday && alreadyLoggedToday) {
+    logHTML += `<div class="weight-not-sunday" style="margin-top:12px">✓ Already logged today — <strong>see you next Sunday!</strong></div>`;
+  } else {
+    const nextSunday = new Date(now);
+    nextSunday.setDate(now.getDate() + (7 - now.getDay()));
+    logHTML += `<div class="weight-not-sunday">
+      <strong>Weigh-ins are on Sundays.</strong> Next one: ${nextSunday.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}.
+      <br>Consistent Sunday weigh-ins = accurate trend data.
+    </div>`;
+  }
+
+  logHTML += `</div>`;
+  document.getElementById('weight-log-area').innerHTML = logHTML;
+
+  // Chart
+  renderWeightChart(entries);
+
+  // Backup section
+  document.getElementById('backup-area').innerHTML = `
+    <div class="backup-card">
+      <div class="backup-title">BACKUP & RESTORE</div>
+      <div class="backup-sub">Your data is saved in this browser only. Export a backup file regularly — especially before switching phones or clearing browser data. Import to restore from a backup.</div>
+      <div class="backup-btns">
+        <button class="backup-btn" onclick="exportData()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Backup
+        </button>
+        <button class="backup-btn import-btn" onclick="document.getElementById('importFile').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import Backup
+        </button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      </div>
+      <div class="import-feedback" id="importFeedback"></div>
+    </div>`;
+
+  // History list
+  renderWeightHistory(entries);
+}
+
+function logWeight() {
+  const val = parseFloat(document.getElementById('weightInput')?.value);
+  if (!val || val < 50 || val > 500) return;
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const entries = getWeightData().filter(e=>e.date!==dateStr);
+  entries.push({ date: dateStr, weight: val.toFixed(1) });
+  saveWeightData(entries);
+  showSaved();
+  renderWeightTab();
+}
+
+function deleteWeightEntry(date) {
+  const entries = getWeightData().filter(e=>e.date!==date);
+  saveWeightData(entries);
+  renderWeightTab();
+}
+
+function setChartRange(r) {
+  chartRange = r;
+  const entries = getWeightData().sort((a,b)=>b.date.localeCompare(a.date));
+  renderWeightChart(entries);
+  document.querySelectorAll('.chart-range-btn').forEach(b=>b.classList.toggle('active', b.dataset.range===r));
+}
+
+function renderWeightChart(entries) {
+  const sorted = [...entries].sort((a,b)=>a.date.localeCompare(b.date));
+  let filtered = sorted;
+  if (chartRange === '4w') filtered = sorted.slice(-4);
+  else if (chartRange === '8w') filtered = sorted.slice(-8);
+  else if (chartRange === '12w') filtered = sorted.slice(-12);
+
+  const chartHTML = `<div class="chart-card">
+    <div class="chart-header">
+      <div class="chart-title">WEIGHT TREND</div>
+      <div class="chart-range-btns">
+        ${['4w','8w','12w','all'].map(r=>`<button class="chart-range-btn${chartRange===r?' active':''}" data-range="${r}" onclick="setChartRange('${r}')">${r==='all'?'ALL':r}</button>`).join('')}
+      </div>
+    </div>
+    ${filtered.length < 2
+      ? `<div class="chart-empty">Log at least 2 weeks to see your trend 📈</div>`
+      : `<div class="chart-wrap"><canvas id="weightCanvas"></canvas></div>`
+    }
+  </div>`;
+  document.getElementById('weight-chart-area').innerHTML = chartHTML;
+
+  if (filtered.length < 2) return;
+
+  requestAnimationFrame(() => {
+    const canvas = document.getElementById('weightCanvas');
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    const W = rect.width, H = rect.height;
+    const pad = { top: 16, right: 16, bottom: 32, left: 44 };
+    const gW = W - pad.left - pad.right;
+    const gH = H - pad.top - pad.bottom;
+
+    const weights = filtered.map(e=>parseFloat(e.weight));
+    const minW = Math.min(...weights) - 2;
+    const maxW = Math.max(...weights) + 2;
+    const range = maxW - minW || 1;
+
+    const pts = filtered.map((e,i) => ({
+      x: pad.left + (i/(filtered.length-1))*gW,
+      y: pad.top + (1 - (parseFloat(e.weight)-minW)/range)*gH,
+      w: parseFloat(e.weight),
+      date: e.date
+    }));
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(46,46,56,0.8)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.top + (i/4)*gH;
+      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left+gW, y); ctx.stroke();
+      const label = (maxW - (i/4)*range).toFixed(1);
+      ctx.fillStyle = '#5a5a6e';
+      ctx.font = '10px DM Sans, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(label, pad.left-6, y+4);
+    }
+
+    // Gradient fill
+    const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top+gH);
+    grad.addColorStop(0, 'rgba(200,241,53,0.18)');
+    grad.addColorStop(1, 'rgba(200,241,53,0)');
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    pts.forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.lineTo(pts[pts.length-1].x, pad.top+gH);
+    ctx.lineTo(pts[0].x, pad.top+gH);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Line
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    pts.forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.strokeStyle = '#c8f135';
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // Dots + date labels
+    pts.forEach((p, i) => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4, 0, Math.PI*2);
+      ctx.fillStyle = '#c8f135';
+      ctx.fill();
+      ctx.strokeStyle = '#080809';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // date label every other point if crowded
+      if (filtered.length <= 8 || i % 2 === 0) {
+        const [,m,d] = p.date.split('-');
+        ctx.fillStyle = '#5a5a6e';
+        ctx.font = '9px DM Sans, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${parseInt(m)}/${parseInt(d)}`, p.x, H - pad.bottom + 14);
+      }
+    });
+  });
+}
+
+function renderWeightHistory(entries) {
+  if (!entries.length) {
+    document.getElementById('weight-history-area').innerHTML =
+      `<div class="weight-history-card"><div class="weight-empty">No weigh-ins logged yet. Come back Sunday! 🗓</div></div>`;
+    return;
+  }
+  let html = `<div class="weight-history-card">
+    <div class="weight-history-header">Weekly Weigh-ins — ${entries.length} total</div>`;
+  entries.forEach((e, i) => {
+    const prev = entries[i+1];
+    let changeHTML = '';
+    if (prev) {
+      const diff = (parseFloat(e.weight) - parseFloat(prev.weight)).toFixed(1);
+      const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
+      const sign = diff > 0 ? '+' : '';
+      changeHTML = `<div class="wh-change ${cls}">${sign}${diff}</div>`;
+    }
+    const [y,m,d] = e.date.split('-').map(Number);
+    const dateLabel = new Date(y,m-1,d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    html += `<div class="weight-history-row">
+      <div class="wh-left">
+        <div class="wh-date">${dateLabel}</div>
+        <div class="wh-week">Week ${entries.length - i}</div>
+      </div>
+      <div class="wh-right">
+        <div class="wh-val">${e.weight} lbs</div>
+        ${changeHTML}
+        <button class="wh-del" onclick="deleteWeightEntry('${e.date}')">✕</button>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('weight-history-area').innerHTML = html;
+}
+
+// ── PLAN TAB ──────────────────────────────────────────────────
+const PLAN_DETAILS = {
+  1: {
+    muscles: 'Chest · Shoulders · Triceps',
+    dur: '60–65 min', focus: 'Strength',
+    exs: [
+      { name: 'Barbell Bench Press', sets: 5, reps: '4–6', rest: '3 min', tip: 'Arch slightly, feet flat, lower to nipple line' },
+      { name: 'Standing Overhead Barbell Press', sets: 4, reps: '6–8', rest: '2.5 min', tip: 'Core tight, lockout at top — clean it up from the floor' },
+      { name: 'Close-Grip Bench Press', sets: 3, reps: '8–10', rest: '90 sec', tip: 'Elbows tucked — tricep overload' },
+      { name: 'Barbell Skull Crushers', sets: 3, reps: '10–12', rest: '90 sec', tip: 'Lower to forehead, pause, full extension' },
+      { name: 'Push-Ups', sets: 3, reps: '10–15', rest: '60 sec', tip: 'End of push day — chest and triceps already fatigued' },
+    ],
+    tips: [
+      { icon: '🎯', title: 'Bench is your main event today', body: 'Push A is your heaviest press day. Go into bench with full energy — don\'t burn out on warm-ups. Work up to your top weight over 2–3 warm-up sets before your first working set.' },
+      { icon: '📐', title: 'Bench setup matters more than you think', body: 'Feet flat on the floor, slight arch in your lower back, shoulder blades squeezed together and pulled down. This shelf your shoulders sit on is what protects them from injury over time.' },
+      { icon: '⚖️', title: 'Add weight if you hit the top of your rep range', body: 'If you got 6 reps last week on bench, go up 5 lbs today. Progressive overload is the whole game. If you didn\'t track last week\'s weight — start now in the tracker.' },
+      { icon: '🫁', title: 'Brace your core on overhead press', body: 'Before each OHP rep, take a big breath and brace your abs like you\'re about to get punched. This protects your lower back and lets you transfer more force to the bar.' },
+      { icon: '⏱️', title: 'Actually rest 3 minutes between heavy sets', body: 'On bench and OHP, your nervous system needs 2–3 minutes to fully recover between sets. Cutting rest short means less weight on the next set — which means less stimulus for growth.' },
+    ]
+  },
+  2: {
+    muscles: 'Back · Biceps · Rear Delts · Forearms',
+    dur: '65–70 min', focus: 'Strength',
+    exs: [
+      { name: 'Barbell Deadlift', sets: 4, reps: '4–6', rest: '3 min', tip: 'Biggest mass builder — full reset each rep' },
+      { name: 'Barbell Bent-Over Row (overhand)', sets: 4, reps: '6–8', rest: '2.5 min', tip: 'Hinge 45°, pull to lower chest, controlled' },
+      { name: 'Barbell Upright Row', sets: 3, reps: '10–12', rest: '90 sec', tip: 'Elbows lead, pull to chin height' },
+      { name: 'Barbell Bicep Curl', sets: 3, reps: '8–10', rest: '90 sec', tip: 'No swinging — pause at top and bottom' },
+      { name: 'Barbell Pendlay Row', sets: 3, reps: '8–10', rest: '90 sec', tip: 'Back parallel to floor, bar dead on ground each rep, explosive pull' },
+      { name: 'Barbell Reverse Curl', sets: 3, reps: '10–12', rest: '60 sec', tip: 'Overhand grip — forearm thickness; go lighter than regular curls' },
+    ],
+    tips: [
+      { icon: '🏋️', title: 'Deadlift is the most important lift you do all week', body: 'More total muscle mass is recruited by a deadlift than any other exercise. Learn the hip hinge pattern — push the floor away rather than thinking about pulling the bar up. Your legs drive it, your back locks it in.' },
+      { icon: '🤜', title: 'Squeeze the bar like you\'re trying to crush it', body: 'On every pull — rows, curls, deadlifts — a tight grip activates more forearm and bicep muscle. It also helps protect your wrists. Grip the bar hard before each set.' },
+      { icon: '🔙', title: 'Feel your back on rows, not just your arms', body: 'Most beginners pull rows with their biceps. Think about driving your elbows back and squeezing your shoulder blades together at the top. If your biceps are failing before your back, you\'re doing it right.' },
+      { icon: '💪', title: 'Forearm work goes last for a reason', body: 'Reverse curls and wrist curls are at the end because your grip is already pre-fatigued from deadlifts and rows. That makes the isolation work more effective. Don\'t skip them because you\'re tired.' },
+      { icon: '😮‍💨', title: 'Reset your breath between every deadlift rep', body: 'Don\'t bounce the bar off the floor or rush between reps. Set it down, reset your grip, brace your core, then pull again. Each rep should be treated like a single max effort.' },
+    ]
+  },
+  3: {
+    muscles: 'Chest · Shoulders · Triceps',
+    dur: '55–60 min', focus: 'Hypertrophy',
+    exs: [
+      { name: 'Barbell Floor Press', sets: 4, reps: '8–10', rest: '2 min', tip: 'Tricep-dominant — great chest builder, no rack needed' },
+      { name: 'Seated Overhead Barbell Press', sets: 4, reps: '8–10', rest: '2 min', tip: 'Strict — no leg drive, pure shoulder isolation' },
+      { name: 'Barbell Front Raise', sets: 3, reps: '12–15', rest: '75 sec', tip: 'Slow and controlled, no momentum' },
+      { name: 'Barbell Skull Crushers', sets: 3, reps: '12–15', rest: '75 sec', tip: 'Slight angle back at elbow, full extension' },
+      { name: 'Diamond Push-Ups', sets: 3, reps: 'To failure', rest: '60 sec', tip: 'Hands close, elbows track back — burnout finisher' },
+    ],
+    tips: [
+      { icon: '📊', title: 'Today is volume, not max weight', body: 'Push B is hypertrophy focused — higher reps, shorter rest, more metabolic stress. Don\'t try to match Monday\'s weights. The pump and burn you feel is the point.' },
+      { icon: '🪑', title: 'Seated OHP isolates your shoulders more than standing', body: 'Without leg drive, your delts have to do all the work. Use this to identify your weak points — if one shoulder feels weaker than the other, focus on keeping reps even and controlled.' },
+      { icon: '🔥', title: 'Push the diamond push-ups to actual failure', body: 'The burnout set at the end only works if you actually go to failure. When your form breaks down completely — that\'s failure. Not when it starts to burn.' },
+      { icon: '⏳', title: 'Shorter rest today is intentional', body: '75 second rests keep your heart rate elevated and increase metabolic stress on the muscle — one of the key drivers of hypertrophy. It\'ll feel harder than Monday even with lighter weights. That\'s fine.' },
+      { icon: '🧠', title: 'Mind-muscle connection matters on isolation work', body: 'On front raises and skull crushers, slow down and actually focus on the muscle working. Research shows that consciously thinking about the target muscle during an exercise increases activation.' },
+    ]
+  },
+  4: {
+    muscles: 'Back · Biceps · Traps · Forearms',
+    dur: '60–65 min', focus: 'Hypertrophy',
+    exs: [
+      { name: 'Barbell Bent-Over Row (underhand)', sets: 4, reps: '8–10', rest: '2 min', tip: 'Supinated grip hits biceps more — squeeze at top' },
+      { name: 'Romanian Deadlift', sets: 3, reps: '10–12', rest: '2 min', tip: 'Hinge movement — feel the hamstring stretch on the way down' },
+      { name: 'Barbell Shrug', sets: 4, reps: '12–15', rest: '90 sec', tip: '1-second hold at top, don\'t roll your shoulders' },
+      { name: 'Barbell Drag Curl', sets: 3, reps: '10–12', rest: '90 sec', tip: 'Bar drags up your torso — great for bicep peak' },
+      { name: 'Barbell 21s', sets: 3, reps: '21', rest: '90 sec', tip: '7 bottom half, 7 top half, 7 full reps — brutal finish' },
+      { name: 'Barbell Wrist Curl (seated)', sets: 3, reps: '15–20', rest: '45 sec', tip: 'Forearms on thighs, palms up — full range, slow reps' },
+    ],
+    tips: [
+      { icon: '🔄', title: 'Underhand rows recruit your biceps harder', body: 'The supinated grip on today\'s rows puts your biceps in a stronger position. You\'ll feel it in your arms more than Monday\'s rows. That\'s the point — it\'s a bicep day as much as a back day.' },
+      { icon: '🪤', title: 'Shrugs: pause, don\'t roll', body: 'Trap growth comes from the full squeeze at the top — hold for a full second before lowering. Rolling your shoulders adds no benefit and can irritate your rotator cuff. Straight up, hold, straight down.' },
+      { icon: '🌊', title: 'Barbell 21s will humble you', body: 'Go significantly lighter than your regular curl weight. 7 bottom-half reps, 7 top-half, 7 full — your biceps will be on fire by rep 15. That\'s the metabolic stress that drives growth.' },
+      { icon: '🫳', title: 'Wrist curls: full range of motion only', body: 'Let the bar roll to your fingertips at the bottom and curl your wrists fully at the top. Partial reps on wrist curls are almost useless. Slow reps with full range beat heavy sloppy ones every time.' },
+      { icon: '💆', title: 'Your upper back is probably tight today', body: 'Wednesday push day pressed a lot. Your chest and front delts will be tight, which can pull your shoulders forward. Focus on squeezing your shoulder blades together on every row rep — it counteracts that imbalance.' },
+    ]
+  },
+  5: {
+    muscles: 'Chest · Shoulders · Triceps',
+    dur: '55–60 min', focus: 'Pump / Volume',
+    exs: [
+      { name: 'Barbell Bench Press (rep focus)', sets: 3, reps: '10–12', rest: '90 sec', tip: 'Lighter than Monday — solid form, squeeze the chest' },
+      { name: 'Overhead Barbell Press (push press)', sets: 3, reps: '6–8', rest: '2 min', tip: 'Slight leg drive — go heavier than seated version' },
+      { name: 'Barbell Bench Close-Grip Paused', sets: 3, reps: '8–10', rest: '90 sec', tip: '1-sec pause on chest — full tricep recruitment' },
+      { name: 'Barbell Skull Crushers (drop set)', sets: 3, reps: '10–12', rest: '75 sec', tip: 'Drop 20% on last set and rep out' },
+      { name: 'Push-Up Burnout', sets: 3, reps: 'Max', rest: '45 sec', tip: 'End every Friday with this — max reps each set' },
+    ],
+    tips: [
+      { icon: '🏁', title: 'Last push day of the week — finish strong', body: 'Push C is about accumulated volume, not new PRs. Your chest and shoulders have already been hit twice. Today\'s goal is to push through fatigue and get quality reps in — that extra stimulus is what separates good progress from great progress.' },
+      { icon: '🦵', title: 'The push press: use your legs deliberately', body: 'A slight dip and drive with your legs lets you move 10–15% more weight overhead than a strict press. Think of it as a jump you stop halfway — the bar should feel like it floats up. This is a skill, get comfortable with it.' },
+      { icon: '⏸️', title: 'The paused close-grip bench: resist the bounce', body: 'The 1-second pause on your chest removes all elastic energy from the lift. Every rep starts from zero. It feels way harder than it should — that\'s the tricep having to generate force from scratch.' },
+      { icon: '🎯', title: 'Push-up burnout: don\'t sandbag it', body: 'Three sets of max push-ups with 45 seconds rest. The last set should feel nearly impossible. If set 3 is easy, you\'re not going hard enough on sets 1 and 2.' },
+      { icon: '🍽️', title: 'Eat a big meal after this', body: 'You\'ve now done three push days this week. Your chest, shoulders, and triceps are maximally broken down and ready to grow. A big protein and carb meal post-workout right now is going to do a lot of work.' },
+    ]
+  },
+  6: {
+    muscles: 'Quads · Hamstrings · Glutes · Calves',
+    dur: '50 min', focus: 'Strength + Size',
+    exs: [
+      { name: 'Barbell Hack Squat', sets: 4, reps: '6–8', rest: '2.5 min', tip: 'Bar behind legs — just drop it if you fail, totally safe' },
+      { name: 'Romanian Deadlift', sets: 3, reps: '8–10', rest: '2 min', tip: 'Slow on the way down, feel the hamstring stretch' },
+      { name: 'Leg Extensions', sets: 3, reps: '12–15', rest: '90 sec', tip: 'Pause and squeeze at the top of each rep' },
+      { name: 'Bulgarian Split Squat', sets: 3, reps: '8–10 each', rest: '2 min', tip: 'Back foot on bench — start light until balance is dialed in' },
+      { name: 'Standing Calf Raises', sets: 4, reps: '15–20', rest: '60 sec', tip: 'Full range — pause at bottom stretch, squeeze at top' },
+    ],
+    tips: [
+      { icon: '🦵', title: 'Hack squat: heels slightly elevated helps depth', body: 'Put a 2.5 or 5lb plate under each heel. This compensates for limited ankle mobility and lets you squat deeper without your lower back rounding. Deeper squat = more quad recruitment.' },
+      { icon: '⚖️', title: 'Bulgarian split squat: front foot position is everything', body: 'Your front foot should be far enough forward that when you\'re at the bottom, your shin is vertical. If your knee tracks too far over your toe, move your foot out. Get this right before adding weight.' },
+      { icon: '🧠', title: 'Leg work is mentally harder — push through it', body: 'Leg training is uncomfortable in a way upper body isn\'t. Your whole body feels it, you get more out of breath, and it\'s easy to stop a set early. Those last 2 reps you want to skip are where the growth actually happens.' },
+      { icon: '🍗', title: 'Legs need more fuel than upper body days', body: 'Squats and deadlifts burn significantly more calories than bench or curls — they recruit your biggest muscle groups. Eat a solid meal with carbs 1–2 hours before leg day. Don\'t train legs fasted.' },
+      { icon: '🦷', title: 'Calves need full range or they won\'t grow', body: 'Most people do quarter-range calf raises and wonder why their calves don\'t grow. Let your heel drop all the way to a stretch at the bottom — hold for a second — then rise all the way up and squeeze hard at the top.' },
+    ]
+  },
+  0: {
+    muscles: null, dur: null, focus: null, exs: [],
+    tips: [
+      { icon: '😴', title: 'Sleep is the most anabolic thing you can do today', body: 'Aim for 8–9 hours tonight. HGH and testosterone spike during deep sleep — this is literally when your muscles from this week finish growing.' },
+      { icon: '🥩', title: 'Still hit your protein target', body: 'Recovery doesn\'t pause on rest days. Your muscles are still repairing. Get your 150–175g of protein in even though you\'re not training.' },
+      { icon: '💧', title: 'Hydrate — especially on creatine', body: 'Drink at least 3 liters of water today. Creatine draws water into muscle cells so dehydration hits harder when you\'re supplementing it.' },
+      { icon: '🔬', title: 'Take your creatine', body: '5g today, same as every day. Creatine works by keeping your muscle stores saturated — missing a day doesn\'t ruin it, but consistency is what keeps it working.' },
+      { icon: '🚶', title: 'Light movement is fine — even beneficial', body: 'A 20–30 min walk helps blood flow to sore muscles and speeds up recovery. Don\'t sit completely still all day, but don\'t do anything that spikes your heart rate.' },
+      { icon: '🧘', title: 'Stretch your chest and hip flexors', body: 'After a week of pressing and squatting, your chest and hip flexors get tight. Doorway chest stretches and a couch stretch for 2 minutes each side will make a difference in how you feel Monday.' },
+    ]
+  }
+};
+
+const PLAN_DAY_NAMES = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+const PLAN_DAY_ABBR = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const PLAN_TYPES = ['Rest','Push A','Pull A','Push B','Pull B','Push C','Legs'];
+
+let activePlanDay = new Date().getDay();
+
+function renderPlanTab() {
+  const todayDOW = new Date().getDay();
+
+  // Week strip
+  let strip = `<div class="plan-week-strip">`;
+  for (let i = 0; i < 7; i++) {
+    const isRest = i === 0;
+    const isToday = i === todayDOW;
+    const isActive = i === activePlanDay;
+    let cls = 'plan-day-pill';
+    if (isRest) cls += ' rest-pill';
+    if (isToday) cls += ' today-pill';
+    if (isActive) cls += ' active';
+    const onclick = `onclick="selectPlanDay(${i})"`;
+    strip += `<div class="${cls}" ${onclick}>
+      <div class="plan-pill-abbr">${PLAN_DAY_ABBR[i]}</div>
+      <div class="plan-pill-type">${PLAN_TYPES[i]}</div>
+      <div class="plan-pill-dot"></div>
+    </div>`;
+  }
+  strip += `</div>`;
+  document.getElementById('plan-week-strip').innerHTML = strip;
+
+  // Detail
+  const detail = PLAN_DETAILS[activePlanDay];
+  if (!detail) {
+    document.getElementById('plan-day-detail').innerHTML = `
+      <div class="plan-rest-card">
+        <h2>REST DAY</h2>
+        <p>Walk, stretch, hit your protein, drink water, sleep 8+ hours. Take your creatine.</p>
+      </div>`;
+    return;
+  }
+
+  // Rest day (Sunday) — has tips but no exercises
+  if (!detail.exs.length) {
+    let html = `<div class="plan-rest-card" style="margin-bottom:16px">
+      <h2>REST DAY</h2>
+      <p>Your muscles are rebuilding right now. Everything below is what makes that process actually work.</p>
+    </div>
+    ${renderTipsHTML(detail.tips)}`;
+    document.getElementById('plan-day-detail').innerHTML = html;
+    return;
+  }
+
+  const type = PLAN_TYPES[activePlanDay];
+  const isToday = activePlanDay === todayDOW;
+
+  let html = `<div class="plan-detail-card">
+    <div class="plan-detail-header">
+      <div class="plan-detail-day-label">${PLAN_DAY_NAMES[activePlanDay]}${isToday ? ' — TODAY' : ''}</div>
+      <div class="plan-detail-title">${type}</div>
+      <div class="plan-detail-muscles">${detail.muscles}</div>
+      <div class="plan-detail-badges">
+        <span class="badge badge-green">⏱ ${detail.dur}</span>
+        <span class="badge badge-blue">${detail.focus}</span>
+        <span class="badge badge-green">${detail.exs.length} exercises</span>
+      </div>
+    </div>`;
+
+  detail.exs.forEach((ex, i) => {
+    html += `<div class="plan-ex-row">
+      <div class="plan-ex-left">
+        <div class="plan-ex-name">${ex.name}</div>
+        <div class="plan-ex-detail">${ex.reps} reps · ${ex.rest} rest<br><em style="color:#444">${ex.tip}</em></div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div class="plan-ex-sets">${ex.sets}</div>
+        <div class="plan-ex-sets-label">sets</div>
+      </div>
+    </div>`;
+  });
+
+  html += `</div>`;
+  html += renderTipsHTML(detail.tips);
+  document.getElementById('plan-day-detail').innerHTML = html;
+}
+
+function renderTipsHTML(tips) {
+  if (!tips || !tips.length) return '';
+  let html = `<div class="tips-section">
+    <div class="tips-section-label">Tips for today</div>`;
+  tips.forEach(t => {
+    html += `<div class="tip-card">
+      <div class="tip-icon">${t.icon}</div>
+      <div class="tip-body">
+        <div class="tip-title">${t.title}</div>
+        <div class="tip-desc">${t.body}</div>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function selectPlanDay(dow) {
+  activePlanDay = dow;
+  renderPlanTab();
+}
+
+// ── EXPORT / IMPORT ───────────────────────────────────────────
+function exportData() {
+  const backup = {
+    version: 1,
+    exported: new Date().toISOString(),
+    liftData: getStorage(),
+    weightData: getWeightData()
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().split('T')[0];
+  a.href = url;
+  a.download = `lift-tracker-backup-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const feedback = document.getElementById('importFeedback');
+    try {
+      const backup = JSON.parse(e.target.result);
+      if (!backup.liftData && !backup.weightData) throw new Error('Invalid backup file');
+      if (backup.liftData) saveStorage(backup.liftData);
+      if (backup.weightData) saveWeightData(backup.weightData);
+      feedback.textContent = '✓ Backup restored successfully — all your data is back.';
+      feedback.className = 'import-feedback success';
+      feedback.style.display = 'block';
+      setTimeout(() => renderWeightTab(), 800);
+    } catch(err) {
+      feedback.textContent = '✕ That file doesn\'t look like a valid backup. Make sure you\'re using a file exported from this app.';
+      feedback.className = 'import-feedback error';
+      feedback.style.display = 'block';
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+renderToday();
+</script>
+</body>
+</html>

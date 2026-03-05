@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bulk Plan — 6 Day Split</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --card: #1c1c22;
+    --border: #2c2c36;
+    --accent: #ff6b35;
+    --accent2: #ffb347;
+    --blue: #4dabf7;
+    --green: #69db7c;
+    --text: #f0eff4;
+    --muted: #7c7c8e;
+    --disp: 'Barlow Condensed', sans-serif;
+    --body: 'Inter', sans-serif;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HERO */
+  .hero {
+    padding: 52px 20px 36px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .hero-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .eyebrow-line {
+    width: 32px; height: 2px;
+    background: var(--accent);
+  }
+  .eyebrow-text {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .hero h1 {
+    font-family: var(--disp);
+    font-size: clamp(56px, 11vw, 96px);
+    font-weight: 900;
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    margin-bottom: 20px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    -webkit-text-stroke: 1.5px var(--accent);
+    color: transparent;
+  }
+  .hero-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 480px;
+    margin-bottom: 28px;
+  }
+  .hero-desc strong { color: var(--accent); font-weight: 600; }
+  .stat-row {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    max-width: 480px;
+  }
+  .stat-item {
+    flex: 1;
+    padding: 14px 0;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-v {
+    font-family: var(--disp);
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .stat-l {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  /* WEEK NAV */
+  .week-section {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px 40px;
+  }
+  .week-strip {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 28px;
+  }
+  .day-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 6px 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.16s ease;
+  }
+  .day-btn:hover:not(.rest) { border-color: var(--accent); }
+  .day-btn.active { border-color: var(--accent); background: rgba(255,107,53,0.08); }
+  .day-btn.rest { border-color: var(--border); opacity: 0.55; cursor: pointer; }
+  .day-btn.rest:hover { opacity: 0.75; }
+  .day-btn.rest.active { opacity: 1; border-color: var(--muted); background: rgba(124,124,142,0.08); }
+  .day-abbr {
+    font-family: var(--disp);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    color: var(--text);
+  }
+  .day-type {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 5px;
+  }
+  .day-btn.active .day-type { color: var(--accent); }
+  .day-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    margin: 7px auto 0;
+    background: var(--border);
+  }
+  .day-btn.active .day-dot { background: var(--accent); }
+
+  /* WORKOUT CARD */
+  .workout-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    animation: slideUp 0.22s ease;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .card-header {
+    padding: 22px 26px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-header::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 200px; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,107,53,0.04));
+    pointer-events: none;
+  }
+  .card-day-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .card-title {
+    font-family: var(--disp);
+    font-size: 38px;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+  .card-muscles {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 5px;
+  }
+  .badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 5px 11px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+  .badge-orange { color: var(--accent); border-color: rgba(255,107,53,0.3); background: rgba(255,107,53,0.08); }
+  .badge-blue   { color: var(--blue);  border-color: rgba(77,171,247,0.3);  background: rgba(77,171,247,0.08); }
+  .badge-green  { color: var(--green); border-color: rgba(105,219,124,0.3); background: rgba(105,219,124,0.08); }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: var(--surface); }
+  th {
+    padding: 9px 20px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background 0.12s; }
+  tbody tr:hover td { background: rgba(255,255,255,0.02); }
+  .ex-name { font-weight: 600; color: var(--text); margin-bottom: 3px; font-size: 14px; }
+  .ex-tip  { font-size: 12px; color: var(--muted); font-style: italic; }
+  .num { color: var(--muted); font-size: 13px; }
+  .sets-n {
+    font-family: var(--disp);
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent2);
+  }
+  .reps-n { font-weight: 600; color: var(--text); font-size: 13px; }
+  .rest-n { color: var(--muted); font-size: 12px; }
+  .priority-tag {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: rgba(255,107,53,0.15);
+    color: var(--accent);
+    border-radius: 3px;
+    padding: 2px 6px;
+    margin-left: 7px;
+    vertical-align: middle;
+  }
+
+  /* REST PANEL */
+  .rest-panel {
+    padding: 56px 26px;
+    text-align: center;
+    animation: slideUp 0.22s ease;
+  }
+  .rest-emoji { font-size: 52px; margin-bottom: 16px; }
+  .rest-panel h2 {
+    font-family: var(--disp);
+    font-size: 52px;
+    font-weight: 900;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .rest-panel p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 400px;
+    margin: 0 auto 28px;
+  }
+  .rest-checklist {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  .rest-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 15px;
+    font-size: 13px;
+    color: #ccc;
+  }
+
+  /* TIPS */
+  .tips-wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px 48px;
+  }
+  .tips-header {
+    font-family: var(--disp);
+    font-size: 32px;
+    font-weight: 900;
+    margin-bottom: 4px;
+  }
+  .tips-sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .tip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .tip-icon { font-size: 22px; margin-bottom: 10px; }
+  .tip h4 {
+    font-family: var(--disp);
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 7px;
+    letter-spacing: 0.03em;
+  }
+  .tip h4 span { color: var(--accent); }
+  .tip p { font-size: 13px; color: var(--muted); line-height: 1.65; }
+  .tip p strong { color: #ddd; }
+
+  /* TRACKER */
+  .tracker-wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+  .tracker-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .input-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 10px;
+    margin-bottom: 12px;
+    align-items: end;
+  }
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+  input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 14px;
+    padding: 9px 12px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus { border-color: var(--accent); }
+  .log-btn {
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--disp);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    border: none;
+    border-radius: 7px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+  .log-btn:hover { opacity: 0.85; }
+  .log-entries { margin-top: 16px; }
+  .log-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 10px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    align-items: center;
+  }
+  .log-row:last-child { border-bottom: none; }
+  .log-ex { font-weight: 600; }
+  .log-date { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 6px; }
+  .log-w {
+    font-family: var(--disp);
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .log-r { color: var(--muted); }
+  .del-btn {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 5px;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 4px 9px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .del-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .empty { text-align: center; padding: 28px; color: var(--muted); font-size: 13px; }
+
+  @media (max-width: 580px) {
+    .week-strip { grid-template-columns: repeat(4, 1fr); }
+    .input-row { grid-template-columns: 1fr 1fr; }
+    .log-row { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-eyebrow"><div class="eyebrow-line"></div><div class="eyebrow-text">6-Day Bulk Program</div></div>
+  <h1>TRAIN<br><em>HARDER.</em><br>GROW<br><em>BIGGER.</em></h1>
+  <p class="hero-desc">
+    Push/Pull/Push/Pull/Push/Legs — designed to maximize upper body volume while still training legs once a week. <strong>Sunday is your only rest day.</strong> That's all you need.
+  </p>
+  <div class="stat-row">
+    <div class="stat-item"><div class="stat-v">6</div><div class="stat-l">Days/Week</div></div>
+    <div class="stat-item"><div class="stat-v">1</div><div class="stat-l">Rest Day</div></div>
+    <div class="stat-item"><div class="stat-v">3×</div><div class="stat-l">Push Days</div></div>
+    <div class="stat-item"><div class="stat-v">2×</div><div class="stat-l">Pull Days</div></div>
+  </div>
+</div>
+
+<div class="week-section">
+  <div class="week-strip" id="weekStrip"></div>
+  <div id="panel"></div>
+</div>
+
+<div class="tips-wrap">
+  <div class="tips-header">BULK <span style="color:var(--accent)">NOTES</span></div>
+  <div class="tips-sub">What actually moves the needle at your size and age</div>
+  <div class="tips-grid">
+    <div class="tip">
+      <div class="tip-icon">🍽️</div>
+      <h4>EAT <span>MORE</span></h4>
+      <p>At 6'2" / 150 lbs you have a high metabolism. Aim for <strong>3,000–3,200 cal/day</strong> and <strong>150–175g protein</strong>. If the scale doesn't move up 0.5–1 lb/week, you're not eating enough — full stop.</p>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">🔬</div>
+      <h4>CREATINE <span>TIMING</span></h4>
+      <p>5g daily, every single day — even rest days. <strong>Post-workout with food is optimal</strong> but consistency matters more than timing. Drink 3L+ of water daily; creatine draws water into muscle cells.</p>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">📊</div>
+      <h4>OVERLOAD <span>RULE</span></h4>
+      <p>Add <strong>2.5–5 lbs every week</strong> on compound lifts when you hit the top of your rep range. This is non-negotiable for size. Use the tracker below to know exactly when to go up.</p>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">😴</div>
+      <h4>SLEEP IS <span>ANABOLIC</span></h4>
+      <p>At 18, your body produces more HGH than it ever will again — but <strong>only during deep sleep</strong>. 8–9 hrs isn't optional if size is the goal. It beats any supplement.</p>
+    </div>
+  </div>
+</div>
+
+<div class="tracker-wrap">
+  <div class="tips-header">LIFT <span style="color:var(--accent)">TRACKER</span></div>
+  <div class="tips-sub" style="margin-bottom:20px">Log your top sets — chase progressive overload every week</div>
+  <div class="tracker-box">
+    <div class="input-row">
+      <div class="field"><label>Exercise</label><input id="ex" type="text" placeholder="Bench Press" /></div>
+      <div class="field"><label>Weight (lbs)</label><input id="wt" type="number" placeholder="135" /></div>
+      <div class="field"><label>Reps</label><input id="rp" type="number" placeholder="8" /></div>
+      <div><button class="log-btn" onclick="addLog()">LOG SET</button></div>
+    </div>
+    <div class="log-entries" id="logEntries">
+      <div class="empty">No sets logged yet — start tracking to chase PRs 🔥</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const plan = [
+  {
+    abbr: 'MON', type: 'Push A', rest: false,
+    label: 'MONDAY — PUSH A',
+    title: 'PUSH A', muscles: 'Chest · Shoulders · Triceps (Heavy)',
+    dur: '60–65 min', volume: '5 exercises', focus: 'Strength',
+    exs: [
+      { n: 'Barbell Bench Press', tip: 'Arch slightly, feet flat, lower to nipple line', sets: 5, reps: '4–6', rest: '3 min', priority: true },
+      { n: 'Standing Overhead Barbell Press', tip: 'Core tight, lockout at top, don\'t flare elbows', sets: 4, reps: '6–8', rest: '2.5 min', priority: true },
+      { n: 'Close-Grip Bench Press', tip: 'Elbows tucked — tricep overload', sets: 3, reps: '8–10', rest: '90 sec', priority: false },
+      { n: 'Barbell Skull Crushers', tip: 'Lower to forehead, pause, full extension', sets: 3, reps: '10–12', rest: '90 sec', priority: false },
+      { n: 'Push-Ups (weighted)', tip: 'Plate on back or feet elevated — go to failure', sets: 3, reps: '10–15', rest: '60 sec', priority: false },
+    ]
+  },
+  {
+    abbr: 'TUE', type: 'Pull A', rest: false,
+    label: 'TUESDAY — PULL A',
+    title: 'PULL A', muscles: 'Back · Biceps · Rear Delts · Forearms (Heavy)',
+    dur: '65–70 min', volume: '6 exercises', focus: 'Strength',
+    exs: [
+      { n: 'Barbell Deadlift', tip: 'Biggest mass builder in existence — learn this lift', sets: 4, reps: '4–6', rest: '3 min', priority: true },
+      { n: 'Barbell Bent-Over Row (overhand)', tip: 'Hinge 45°, pull to lower chest, controlled', sets: 4, reps: '6–8', rest: '2.5 min', priority: true },
+      { n: 'Barbell Upright Row', tip: 'Elbows lead, pull to chin height', sets: 3, reps: '10–12', rest: '90 sec', priority: false },
+      { n: 'Barbell Bicep Curl', tip: 'No swinging — pause at top and bottom', sets: 3, reps: '8–10', rest: '90 sec', priority: false },
+      { n: 'Barbell Pendlay Row', tip: 'Back parallel to floor, bar dead on ground each rep — explosively pull to lower chest, full reset between reps', sets: 3, reps: '8–10', rest: '90 sec', priority: false },
+      { n: 'Barbell Reverse Curl', tip: 'Overhand grip — hits brachioradialis for forearm thickness; go lighter than regular curls', sets: 3, reps: '10–12', rest: '60 sec', priority: false },
+    ]
+  },
+  {
+    abbr: 'WED', type: 'Push B', rest: false,
+    label: 'WEDNESDAY — PUSH B',
+    title: 'PUSH B', muscles: 'Chest · Shoulders · Triceps (Volume)',
+    dur: '55–60 min', volume: '5 exercises', focus: 'Hypertrophy',
+    exs: [
+      { n: 'Barbell Floor Press', tip: 'Tricep-dominant — great chest builder without full ROM stress', sets: 4, reps: '8–10', rest: '2 min', priority: true },
+      { n: 'Seated Overhead Barbell Press', tip: 'Strict — no leg drive, isolates shoulders fully', sets: 4, reps: '8–10', rest: '2 min', priority: false },
+      { n: 'Barbell Front Raise', tip: 'Slow and controlled, don\'t use momentum', sets: 3, reps: '12–15', rest: '75 sec', priority: false },
+      { n: 'Barbell Skull Crushers', tip: 'Slight angle back at the elbow, full extension', sets: 3, reps: '12–15', rest: '75 sec', priority: false },
+      { n: 'Diamond Push-Ups', tip: 'Hands close together, elbows track back — burnout set', sets: 3, reps: 'To failure', rest: '60 sec', priority: false },
+    ]
+  },
+  {
+    abbr: 'THU', type: 'Pull B', rest: false,
+    label: 'THURSDAY — PULL B',
+    title: 'PULL B', muscles: 'Back · Biceps · Traps · Forearms (Volume)',
+    dur: '60–65 min', volume: '6 exercises', focus: 'Hypertrophy',
+    exs: [
+      { n: 'Barbell Bent-Over Row (underhand)', tip: 'Supinated grip recruits biceps more — squeeze at top', sets: 4, reps: '8–10', rest: '2 min', priority: true },
+      { n: 'Romanian Deadlift', tip: 'Feel the hamstring stretch — not a squat, hinge movement', sets: 3, reps: '10–12', rest: '2 min', priority: false },
+      { n: 'Barbell Shrug', tip: '1-second hold at top, don\'t roll your shoulders', sets: 4, reps: '12–15', rest: '90 sec', priority: false },
+      { n: 'Barbell Drag Curl', tip: 'Bar drags up your torso — incredible bicep peak builder', sets: 3, reps: '10–12', rest: '90 sec', priority: false },
+      { n: 'Barbell 21s', tip: '7 reps bottom half, 7 top half, 7 full — brutal finish', sets: 3, reps: '21', rest: '90 sec', priority: false },
+      { n: 'Barbell Wrist Curl (seated)', tip: 'Forearms on thighs, palms up — full range, slow reps for forearm flexors', sets: 3, reps: '15–20', rest: '45 sec', priority: false },
+    ]
+  },
+  {
+    abbr: 'FRI', type: 'Push C', rest: false,
+    label: 'FRIDAY — PUSH C',
+    title: 'PUSH C', muscles: 'Chest · Shoulders · Arms (Full Pump)',
+    dur: '55–60 min', volume: '5 exercises', focus: 'Pump / Volume',
+    exs: [
+      { n: 'Barbell Bench Press (rep focus)', tip: 'Lighter than Monday — aim for 3×10–12 with solid form', sets: 3, reps: '10–12', rest: '90 sec', priority: false },
+      { n: 'Overhead Barbell Press (push press)', tip: 'Use slight leg drive — go heavier than seated', sets: 3, reps: '6–8', rest: '2 min', priority: true },
+      { n: 'Barbell Bench (close-grip paused)', tip: '1-sec pause on chest — full tricep recruitment', sets: 3, reps: '8–10', rest: '90 sec', priority: false },
+      { n: 'Barbell Skull Crushers (drop weight)', tip: 'Drop 20% on last set and rep out — extend the burn', sets: 3, reps: '10–12', rest: '75 sec', priority: false },
+      { n: 'Push-Up Burnout', tip: 'Max reps, 3 sets, 45 sec rest — end every Friday with this', sets: 3, reps: 'Max', rest: '45 sec', priority: false },
+    ]
+  },
+  {
+    abbr: 'SAT', type: 'Legs', rest: false,
+    label: 'SATURDAY — LEGS',
+    title: 'LEGS', muscles: 'Quads · Hamstrings · Glutes · Calves',
+    dur: '50 min', volume: '5 exercises', focus: 'Strength + Size',
+    exs: [
+      { n: 'Barbell Hack Squat', tip: 'Bar behind legs, feet shoulder-width — just drop it if you fail, no rack needed', sets: 4, reps: '6–8', rest: '2.5 min', priority: true },
+      { n: 'Romanian Deadlift', tip: 'Hamstring focus — slow on the way down, feel the stretch', sets: 3, reps: '8–10', rest: '2 min', priority: false },
+      { n: 'Leg Extensions', tip: 'Pause and squeeze at the top of each rep', sets: 3, reps: '12–15', rest: '90 sec', priority: false },
+      { n: 'Bulgarian Split Squat (barbell)', tip: 'Back foot on bench, bar on traps — start light to nail balance first, front shin stays vertical', sets: 3, reps: '8–10 each', rest: '2 min', priority: false },
+      { n: 'Standing Calf Raises (barbell)', tip: 'Full range — pause at bottom stretch, squeeze at top', sets: 4, reps: '15–20', rest: '60 sec', priority: false },
+    ]
+  },
+  {
+    abbr: 'SUN', type: 'Rest', rest: true,
+    label: 'SUNDAY — REST',
+    title: 'REST', muscles: '',
+    dur: null, volume: null, focus: null,
+    exs: []
+  }
+];
+
+let active = 0;
+let logs = [];
+
+function renderStrip() {
+  document.getElementById('weekStrip').innerHTML = plan.map((d, i) => `
+    <div class="day-btn ${d.rest ? 'rest' : ''} ${i === active ? 'active' : ''}" onclick="select(${i})">
+      <div class="day-abbr">${d.abbr}</div>
+      <div class="day-type">${d.type}</div>
+      <div class="day-dot"></div>
+    </div>
+  `).join('');
+}
+
+function renderPanel() {
+  const d = plan[active];
+  const p = document.getElementById('panel');
+  if (d.rest) {
+    p.innerHTML = `
+      <div class="workout-card">
+        <div class="rest-panel">
+          <div class="rest-emoji">💤</div>
+          <h2>REST DAY</h2>
+          <p>You've trained 6 days straight. Today is when your muscle fibers actually repair and grow. Don't touch the weights. You earned this.</p>
+          <div class="rest-checklist">
+            <div class="rest-item">🚶 20-min walk</div>
+            <div class="rest-item">🥩 Hit protein goal</div>
+            <div class="rest-item">💧 3L of water</div>
+            <div class="rest-item">🧘 Stretch chest & hips</div>
+            <div class="rest-item">😴 8+ hours tonight</div>
+            <div class="rest-item">🔬 Take your creatine</div>
+          </div>
+        </div>
+      </div>`;
+    return;
+  }
+  p.innerHTML = `
+    <div class="workout-card">
+      <div class="card-header">
+        <div>
+          <div class="card-day-label">${d.label}</div>
+          <div class="card-title">${d.title}</div>
+          <div class="card-muscles">${d.muscles}</div>
+        </div>
+        <div class="badges">
+          <span class="badge badge-orange">⏱ ${d.dur}</span>
+          <span class="badge badge-blue">📊 ${d.focus}</span>
+          <span class="badge badge-green">✦ ${d.volume}</span>
+        </div>
+      </div>
+      <table>
+        <thead><tr>
+          <th style="width:36px">#</th>
+          <th>Exercise</th>
+          <th>Sets</th>
+          <th>Reps</th>
+          <th>Rest</th>
+        </tr></thead>
+        <tbody>
+          ${d.exs.map((e, i) => `
+            <tr>
+              <td class="num">${i + 1}</td>
+              <td>
+                <div class="ex-name">${e.n}${e.priority ? '<span class="priority-tag">KEY LIFT</span>' : ''}</div>
+                <div class="ex-tip">${e.tip}</div>
+              </td>
+              <td><span class="sets-n">${e.sets}</span></td>
+              <td><span class="reps-n">${e.reps}</span></td>
+              <td><span class="rest-n">${e.rest}</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function select(i) {
+  active = i;
+  renderStrip();
+  renderPanel();
+}
+
+function addLog() {
+  const ex = document.getElementById('ex').value.trim();
+  const wt = document.getElementById('wt').value.trim();
+  const rp = document.getElementById('rp').value.trim();
+  if (!ex || !wt || !rp) return;
+  logs.unshift({ ex, wt, rp, date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}) });
+  document.getElementById('ex').value = '';
+  document.getElementById('wt').value = '';
+  document.getElementById('rp').value = '';
+  renderLogs();
+}
+
+function removeLog(i) {
+  logs.splice(i, 1);
+  renderLogs();
+}
+
+function renderLogs() {
+  const el = document.getElementById('logEntries');
+  if (!logs.length) {
+    el.innerHTML = '<div class="empty">No sets logged yet — start tracking to chase PRs 🔥</div>';
+    return;
+  }
+  el.innerHTML = logs.map((l, i) => `
+    <div class="log-row">
+      <span class="log-ex">${l.ex}<span class="log-date">${l.date}</span></span>
+      <span class="log-w">${l.wt} lbs</span>
+      <span class="log-r">${l.rp} reps</span>
+      <button class="del-btn" onclick="removeLog(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+renderStrip();
+renderPanel();
+</script>
+</body>
+</html>
