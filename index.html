@@ -516,6 +516,66 @@ canvas#weightCanvas{width:100%;height:100%;}
 .import-feedback.success{background:rgba(105,219,124,0.1);color:#69db7c;border:1px solid rgba(105,219,124,0.25);}
 .import-feedback.error{background:rgba(255,77,77,0.08);color:var(--red);border:1px solid rgba(255,77,77,0.2);}
 
+/* MODE TOGGLE */
+.mode-toggle{
+  display:flex;gap:0;background:var(--s2);border:1px solid var(--border);
+  border-radius:10px;overflow:hidden;margin-bottom:20px;
+}
+.mode-btn{
+  flex:1;padding:11px 10px;text-align:center;cursor:pointer;
+  font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--muted);transition:all 0.15s;user-select:none;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.mode-btn.active{background:var(--s3);color:var(--accent);}
+.mode-btn:first-child{border-right:1px solid var(--border);}
+
+/* VACATION SET ROWS */
+.vac-sets-container{padding:0 18px 12px;}
+.vac-set-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-bottom:1px solid rgba(46,46,56,0.5);
+}
+.vac-set-row:last-child{border-bottom:none;}
+.vac-set-row.done{
+  background:rgba(200,241,53,0.04);border-radius:7px;
+  border-bottom:none !important;margin-bottom:4px;
+  border:1px solid rgba(200,241,53,0.15) !important;padding:10px 8px;
+}
+.vac-set-left{display:flex;align-items:center;gap:10px;}
+.vac-set-num{font-family:var(--disp);font-size:20px;color:var(--muted);min-width:24px;}
+.vac-set-label{font-size:13px;color:var(--muted);}
+.vac-set-row.done .vac-set-num{color:var(--accent);}
+.vac-set-row.done .vac-set-label{color:var(--accent);}
+.vac-check-btn{
+  width:38px;height:38px;border-radius:8px;flex-shrink:0;
+  border:2px solid var(--border);background:none;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all 0.15s;color:var(--muted);font-size:18px;
+}
+.vac-check-btn:hover{border-color:var(--accent);color:var(--accent);}
+.vac-set-row.done .vac-check-btn{
+  border-color:var(--accent);background:rgba(200,241,53,0.12);color:var(--accent);
+}
+
+/* PLAN MODE TOGGLE (in plan tab) */
+.plan-mode-toggle{
+  display:flex;gap:0;background:var(--s2);border:1px solid var(--border);
+  border-radius:10px;overflow:hidden;margin-bottom:20px;
+}
+.plan-mode-btn{
+  flex:1;padding:10px 8px;text-align:center;cursor:pointer;
+  font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--muted);transition:all 0.15s;user-select:none;
+}
+.plan-mode-btn.active{background:var(--s3);color:var(--accent);}
+.plan-mode-btn:first-child{border-right:1px solid var(--border);}
+.vac-badge{
+  display:inline-block;font-size:9px;font-weight:700;letter-spacing:0.1em;
+  text-transform:uppercase;background:rgba(77,159,255,0.12);color:var(--blue);
+  border:1px solid rgba(77,159,255,0.25);border-radius:3px;padding:2px 6px;
+  margin-left:6px;vertical-align:middle;
+}
 </style>
 </head>
 <body>
@@ -549,6 +609,10 @@ canvas#weightCanvas{width:100%;height:100%;}
     <div class="page-eyebrow">Lift Tracker</div>
     <div class="page-title" id="today-title">LOADING</div>
     <div class="page-sub" id="today-date"></div>
+  </div>
+  <div class="mode-toggle" id="today-mode-toggle">
+    <div class="mode-btn active" id="mode-btn-gym" onclick="setTodayMode('gym')">🏋️ Gym</div>
+    <div class="mode-btn" id="mode-btn-vacation" onclick="setTodayMode('vacation')">🏖️ Vacation</div>
   </div>
   <div id="today-content"></div>
 </div>
@@ -585,6 +649,10 @@ canvas#weightCanvas{width:100%;height:100%;}
     <div class="page-eyebrow">Weekly Split</div>
     <div class="page-title">THE <span style="color:var(--accent)">PLAN</span></div>
     <div class="page-sub">Push / Pull / Push / Pull / Push / Legs — tap any day to see the full workout.</div>
+  </div>
+  <div class="plan-mode-toggle">
+    <div class="plan-mode-btn active" id="plan-btn-gym" onclick="setPlanMode('gym')">🏋️ Gym</div>
+    <div class="plan-mode-btn" id="plan-btn-vacation" onclick="setPlanMode('vacation')">🏖️ Vacation</div>
   </div>
   <div id="plan-week-strip"></div>
   <div id="plan-day-detail"></div>
@@ -753,16 +821,43 @@ function getAllPRs() {
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const SHORT = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
 
+function setTodayMode(mode) {
+  todayMode = mode;
+  document.getElementById('mode-btn-gym').classList.toggle('active', mode === 'gym');
+  document.getElementById('mode-btn-vacation').classList.toggle('active', mode === 'vacation');
+  renderToday();
+}
+
+function getVacStorage() {
+  try { return JSON.parse(localStorage.getItem('vacData') || '{}'); }
+  catch(e) { return {}; }
+}
+function saveVacStorage(data) {
+  try { localStorage.setItem('vacData', JSON.stringify(data)); }
+  catch(e) {}
+}
+
 function renderToday() {
   const now = new Date();
   const dow = now.getDay();
   const key = todayKey();
-  const workout = PLAN[dow];
 
   document.getElementById('today-date').textContent =
     now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
 
+  // Hide mode toggle on rest day
+  const toggleEl = document.getElementById('today-mode-toggle');
+
+  if (todayMode === 'vacation') {
+    renderTodayVacation(dow, key, now, toggleEl);
+    return;
+  }
+
+  // ── GYM MODE (original logic) ──────────────────────────────
+  const workout = PLAN[dow];
+
   if (!workout) {
+    if (toggleEl) toggleEl.style.display = 'none';
     document.getElementById('today-title').innerHTML = `REST <span>DAY</span>`;
     document.getElementById('today-content').innerHTML = `
       <div class="rest-day-card">
@@ -783,6 +878,7 @@ function renderToday() {
     return;
   }
 
+  if (toggleEl) toggleEl.style.display = 'flex';
   document.getElementById('today-title').innerHTML =
     `<span>${workout.type.split(' ')[0]}</span> ${workout.type.split(' ').slice(1).join(' ')}`;
 
@@ -854,39 +950,38 @@ function renderToday() {
 
   html += `</div></div>`;
 
-  // Per-day tips
   const DAY_TIPS = {
-    1: [ // Monday - Push A
+    1: [
       { icon:'🏋️', title:'Start heavy, finish strong', body:'Bench press is your opener — don\'t burn out on warm-up sets. Do 2 light warm-ups then jump to your working weight. Save energy for the last set.' },
       { icon:'💨', title:'Rest fully between compounds', body:'3 minutes between bench and OHP sets isn\'t too long — it\'s necessary. Rushing rest on heavy compound lifts kills your strength on the next set.' },
       { icon:'🔒', title:'Brace your core on OHP', body:'Standing press with a loose core leads to lower back strain. Take a big breath, brace like you\'re about to get punched, then press. Every single rep.' },
       { icon:'📈', title:'Progressive overload check', body:'If you hit the top of your rep range on all sets last Monday, add 2.5 lbs today. Even small jumps compound into big strength gains over months.' },
     ],
-    2: [ // Tuesday - Pull A
+    2: [
       { icon:'⚡', title:'Deadlift is your most important lift', body:'More muscle groups, more weight, more growth stimulus than anything else. Warm up thoroughly — 2–3 light sets — before going heavy. Focus on bracing, not speed.' },
       { icon:'🦺', title:'Protect your lower back', body:'On deadlifts and rows: neutral spine the entire rep. No rounding at the top to squeeze out one more. A back injury sets you back months.' },
       { icon:'🤜', title:'Squeeze on every row', body:'Rows only work if you actually contract your back at the top. Pull your elbows behind your body and hold for half a second. Feel the squeeze, don\'t just move the bar.' },
       { icon:'💪', title:'Reverse curls will feel awkward at first', body:'Your brachioradialis is probably underdeveloped. Go lighter than you think, focus on form, and expect soreness in your forearm the next day — that\'s it working.' },
     ],
-    3: [ // Wednesday - Push B
+    3: [
       { icon:'🛡️', title:'Floor press form tip', body:'Let your triceps touch the floor briefly each rep — don\'t bounce. The pause eliminates momentum and forces your muscles to restart the movement from zero.' },
       { icon:'🎯', title:'Mind-muscle connection day', body:'Push B is your volume day — go slightly lighter and really focus on feeling the muscle work. Slow the eccentric (lowering) to 2–3 seconds on each rep.' },
       { icon:'😤', title:'Diamond push-up finisher', body:'Go to true failure on the last set. This is your burnout — you\'re supposed to be uncomfortable. Rest only 60 seconds between sets to keep the pump going.' },
       { icon:'💧', title:'Stay hydrated mid-session', body:'You\'re 3 days into the week. Creatine needs water to work — sip between sets, especially if you\'re sweating. Dehydration hurts performance noticeably.' },
     ],
-    4: [ // Thursday - Pull B
+    4: [
       { icon:'🔁', title:'Underhand rows hit differently', body:'Supinated grip (palms up) on bent-over rows shifts more load to your lower lats and biceps. It\'s not easier — it\'s a different stimulus. Squeeze hard at the top.' },
       { icon:'🏔️', title:'Shrugs: quality over weight', body:'Don\'t load the bar so heavy you can only do tiny shrugs. Full range — let the traps fully stretch at the bottom, hold at the top. Traps respond to controlled reps.' },
       { icon:'🔥', title:'Barbell 21s will destroy your biceps', body:'That\'s the point. Do them last so your biceps are already fatigued. 7 bottom, 7 top, 7 full — no rest between, no cheating. Best arm pump of the week.' },
       { icon:'📊', title:'Volume check', body:'Thursday is your second pull day. If your back is still sore from Tuesday, that\'s fine — train through it. If it\'s sharp pain, reduce weight. Soreness vs injury is an important distinction.' },
     ],
-    5: [ // Friday - Push C
+    5: [
       { icon:'🎉', title:'Last push day of the week', body:'Push C is volume and pump focused — not max effort. Use weights that let you hit the top of the rep range with 1–2 reps left in the tank on most sets.' },
       { icon:'💥', title:'Push press technique', body:'Slight dip of the knees, then drive up through the bar explosively. The leg drive gets the bar moving — your shoulders and triceps finish it. Lets you go heavier than strict press.' },
       { icon:'🏁', title:'Push-up burnout is mandatory', body:'End every Friday with 3 sets of max push-ups. This is your weekly benchmark — track how many you get. If the number goes up week to week, you\'re getting stronger.' },
       { icon:'🍽️', title:'Eat big tonight', body:'6 days of training hits harder than you think. Tonight eat a big protein and carb meal. Your body is primed to absorb nutrients and you have a rest day tomorrow — maximize it.' },
     ],
-    6: [ // Saturday - Legs
+    6: [
       { icon:'🦵', title:'Hack squat setup matters', body:'Bar sits behind your heels, feet shoulder-width. The narrower your stance the more quad-dominant it is. Keep your chest up, sit straight down. If you fail, step forward and drop it — no danger.' },
       { icon:'⚠️', title:'Bulgarian split squat — start light', body:'Seriously. Even 45 lbs total feels brutal when you first learn this. The balance takes 1–2 sessions to dial in. Don\'t ego lift here — master the movement first.' },
       { icon:'🧠', title:'Leg training mindset', body:'Legs are hard because the muscles are big and the compound lifts are exhausting. Push through the discomfort — this is the one day a week that builds your base and makes everything else stronger.' },
@@ -903,6 +998,96 @@ function renderToday() {
   }
 
   document.getElementById('today-content').innerHTML = html;
+}
+
+function renderTodayVacation(dow, key, now, toggleEl) {
+  const vacWorkout = VAC_PLAN[dow];
+
+  if (!vacWorkout) {
+    if (toggleEl) toggleEl.style.display = 'none';
+    document.getElementById('today-title').innerHTML = `REST <span>DAY</span>`;
+    document.getElementById('today-content').innerHTML = `
+      <div class="rest-day-card">
+        <h2>SUNDAY</h2>
+        <p>Enjoy your vacation. Walk, stretch, eat well. You earned this.</p>
+      </div>`;
+    return;
+  }
+
+  if (toggleEl) toggleEl.style.display = 'flex';
+  document.getElementById('today-title').innerHTML =
+    `<span>${vacWorkout.type.split(' ')[0]}</span> ${vacWorkout.type.split(' ').slice(1).join(' ')}`;
+
+  // Load or init vacation data for today
+  const vacData = getVacStorage();
+  if (!vacData[key]) {
+    vacData[key] = { type: vacWorkout.type, exercises: vacWorkout.exs.map(ex => ({
+      name: ex.name,
+      sets: Array.from({length: ex.sets}, () => ({ done: false }))
+    }))};
+    saveVacStorage(vacData);
+  }
+  const dayData = vacData[key];
+
+  let html = `<div class="today-card">
+    <div class="today-header">
+      <div class="today-day"><span>${SHORT[dow]}</span> — ${vacWorkout.name}</div>
+      <div class="today-badges">
+        <span class="badge badge-green">${vacWorkout.exs.length} exercises</span>
+        <span class="badge badge-blue">🏖️ Vacation</span>
+      </div>
+    </div>
+    <div class="ex-section">`;
+
+  dayData.exercises.forEach((ex, ei) => {
+    const vacEx = vacWorkout.exs[ei];
+    const totalSets = ex.sets.length;
+    const doneSets = ex.sets.filter(s => s.done).length;
+    html += `
+      <div class="ex-label">${ei+1}</div>
+      <div class="ex-name-row">
+        <div class="ex-name">${ex.name}</div>
+        <div style="font-size:11px;color:${doneSets===totalSets?'var(--accent)':'var(--muted)'};">${doneSets}/${totalSets} sets</div>
+      </div>
+      ${vacEx ? `<div class="ex-target-reps">Target: <strong>${vacEx.reps}</strong> · ${vacEx.rest} rest</div>` : ''}
+      ${vacEx ? `<div style="padding:0 18px 8px;font-size:12px;color:var(--muted);font-style:italic;">${vacEx.tip}</div>` : ''}
+      <div class="vac-sets-container">`;
+
+    ex.sets.forEach((set, si) => {
+      html += `<div class="vac-set-row ${set.done ? 'done' : ''}" id="vac-setrow-${ei}-${si}">
+        <div class="vac-set-left">
+          <div class="vac-set-num">${set.done ? '✓' : si+1}</div>
+          <div class="vac-set-label">Set ${si+1} ${vacEx ? `· ${vacEx.reps}` : ''}</div>
+        </div>
+        <button class="vac-check-btn" onclick="toggleVacSet('${key}',${ei},${si})">
+          ${set.done ? '✓' : '○'}
+        </button>
+      </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  html += `</div></div>`;
+
+  // Vacation tips
+  if (vacWorkout.tips && vacWorkout.tips.length) {
+    html += `<div class="tips-block">
+      <div class="tips-block-title">TODAY'S TIPS</div>
+      ${vacWorkout.tips.map(t=>`<div class="tip-card"><div class="tip-icon">${t.icon}</div><div class="tip-body"><div class="tip-title">${t.title}</div><div class="tip-text">${t.body}</div></div></div>`).join('')}
+    </div>`;
+  }
+
+  document.getElementById('today-content').innerHTML = html;
+}
+
+function toggleVacSet(key, ei, si) {
+  const data = getVacStorage();
+  if (!data[key]?.exercises?.[ei]?.sets?.[si]) return;
+  data[key].exercises[ei].sets[si].done = !data[key].exercises[ei].sets[si].done;
+  saveVacStorage(data);
+  showSaved();
+  renderTodayVacation(new Date().getDay(), key, new Date(), document.getElementById('today-mode-toggle'));
 }
 
 function updateSet(key, ei, si, field, val) {
@@ -1549,14 +1734,123 @@ const PLAN_DETAILS = {
   }
 };
 
+// ── VACATION PLAN ─────────────────────────────────────────────
+const VAC_PLAN = {
+  1: { // Monday - Push A
+    name: 'PUSH A', type: 'Push A',
+    muscles: 'Chest · Shoulders · Triceps (Strength)',
+    dur: '35–45 min', focus: 'Strength',
+    exs: [
+      { name: 'Standard Push-Ups', sets: 4, reps: '15–20', rest: '90 sec', tip: 'Hands shoulder-width, body straight like a plank, chest touches the floor each rep.' },
+      { name: 'Pike Push-Ups', sets: 4, reps: '10–15', rest: '90 sec', tip: 'Start in a downward dog with hips high. Bend elbows and lower your head toward the floor, then press back up. Hits shoulders like an overhead press.' },
+      { name: 'Wide Push-Ups', sets: 3, reps: '12–15', rest: '75 sec', tip: 'Hands wider than shoulder-width. Shifts more load onto your chest and less on triceps.' },
+      { name: 'Diamond Push-Ups', sets: 3, reps: '10–12', rest: '75 sec', tip: 'Hands in a diamond shape under your chest. Elbows track back along your sides — tricep focused, not chest.' },
+      { name: 'Chair Dips', sets: 3, reps: '12–15', rest: '75 sec', tip: 'Hands on the edge of a chair or bed, legs extended. Lower until elbows hit 90°, press back up. Keep your back close to the chair.' },
+    ],
+    tips: [
+      { icon: '🐢', title: 'Slow reps = more intensity', body: 'Without weight, tempo is your tool. Try 3 seconds down, 1 second pause, 1 second up on every push-up variation. Makes them significantly harder.' },
+      { icon: '🔥', title: 'Go to true failure', body: 'The last rep where your form breaks down — that\'s the one that counts. Don\'t stop when it burns. Stop when you physically can\'t do another rep.' },
+    ]
+  },
+  2: { // Tuesday - Pull A
+    name: 'PULL A', type: 'Pull A',
+    muscles: 'Back · Biceps · Rear Delts (Strength)',
+    dur: '30–40 min', focus: 'Strength',
+    exs: [
+      { name: 'Table Rows (Inverted Rows)', sets: 4, reps: '10–15', rest: '90 sec', tip: 'Lie under a sturdy table, grip the edge, keep your body straight, pull your chest up to it. The lower your angle, the harder it gets. This is your main back exercise.' },
+      { name: 'Doorframe Rows', sets: 3, reps: '12–15', rest: '90 sec', tip: 'Stand in a doorway, grip both sides at hip height, lean back with arms straight, then pull yourself in. Works back and biceps.' },
+      { name: 'Superman Holds', sets: 3, reps: '12–15', rest: '60 sec', tip: 'Lie face down, extend arms overhead. Lift arms, chest, and legs off the ground simultaneously and hold 2–3 seconds. Squeezes your entire back.' },
+      { name: 'Prone Y/T Raises', sets: 3, reps: '12 each', rest: '60 sec', tip: 'Lie face down. Raise arms into a Y shape (thumbs up), lower, then raise into a T. Hits rear delts and upper back. Go slow.' },
+      { name: 'Towel Bicep Curls', sets: 3, reps: '15–20', rest: '60 sec', tip: 'Loop a towel around a door handle or table leg. Hold both ends, lean back slightly, curl your hands toward your shoulders. Full range of motion.' },
+    ],
+    tips: [
+      { icon: '🪑', title: 'Any table works', body: 'Hotel desk, dining table, even a low windowsill. The key is that it\'s sturdy enough to hold your weight. Test it before you commit to a set.' },
+      { icon: '🤜', title: 'Squeeze at the top', body: 'On every row, pull your shoulder blades together and hold for half a second at the top. Without weight, you need the extra contraction to get full stimulus.' },
+    ]
+  },
+  3: { // Wednesday - Push B
+    name: 'PUSH B', type: 'Push B',
+    muscles: 'Chest · Shoulders · Triceps (Volume)',
+    dur: '35–45 min', focus: 'Hypertrophy',
+    exs: [
+      { name: 'Decline Push-Ups', sets: 4, reps: '12–15', rest: '75 sec', tip: 'Feet elevated on a bed or chair, hands on the floor. The higher your feet, the more it hits upper chest and shoulders.' },
+      { name: 'Incline Push-Ups', sets: 3, reps: '15–20', rest: '60 sec', tip: 'Hands on an elevated surface, feet on the floor. Hits lower chest. Great for volume sets.' },
+      { name: 'Pike Push-Up Hold', sets: 3, reps: '20–30 sec', rest: '75 sec', tip: 'Hold at the bottom of a pike push-up (head near floor, hips high). Time under tension — brutal shoulder burn.' },
+      { name: 'Diamond Push-Ups', sets: 3, reps: '10–15', rest: '75 sec', tip: 'Hands close together under chest. Full range — chest to hands on the way down. Tricep dominant.' },
+      { name: 'Push-Up Burnout', sets: 3, reps: 'Max reps', rest: '60 sec', tip: 'Drop to your knees if needed — goal is max reps each set. Go until you physically cannot do another rep.' },
+    ],
+    tips: [
+      { icon: '⏳', title: 'Volume day — shorter rest is fine', body: 'Push B is about metabolic stress. Keep rest a bit shorter than Push A and feel the pump build. It\'ll feel harder even though the exercises are simpler.' },
+      { icon: '🛏️', title: 'Your bed or couch is your equipment', body: 'Feet on bed for decline push-ups, hands on bed for incline. You have everything you need in a hotel room.' },
+    ]
+  },
+  4: { // Thursday - Pull B
+    name: 'PULL B', type: 'Pull B',
+    muscles: 'Back · Biceps · Traps (Volume)',
+    dur: '30–40 min', focus: 'Hypertrophy',
+    exs: [
+      { name: 'Table Rows (Inverted Rows)', sets: 4, reps: '12–15', rest: '75 sec', tip: 'Same as Tuesday but focus on squeezing your shoulder blades together at the top — don\'t just yank with your arms.' },
+      { name: 'Doorframe Rows', sets: 3, reps: '15–20', rest: '60 sec', tip: 'Keep rest short today. Focus on the squeeze at the top of each rep. Volume day.' },
+      { name: 'Towel Bicep Curls', sets: 4, reps: '15–20', rest: '60 sec', tip: 'Lean back slightly for more resistance. Slow negatives — 3 seconds on the way down. This is your bicep volume work.' },
+      { name: 'Superman Holds', sets: 3, reps: '15', rest: '60 sec', tip: 'Face down on the floor. Lift arms and legs simultaneously, squeeze for 2 seconds. Hits lower back, glutes, and rear delts.' },
+      { name: 'Shoulder Tap Plank', sets: 3, reps: '20 taps (10 each)', rest: '45 sec', tip: 'Start in push-up position. Lift one hand, tap opposite shoulder, switch. Keep hips from rotating — brace your core hard.' },
+    ],
+    tips: [
+      { icon: '🔁', title: 'Second pull day — push for more volume', body: 'Your back has had two days to recover from Tuesday. Push for higher reps today. If table rows feel easier, lower your body closer to horizontal to increase the angle.' },
+    ]
+  },
+  5: { // Friday - Push C
+    name: 'PUSH C', type: 'Push C',
+    muscles: 'Chest · Shoulders · Arms (Pump)',
+    dur: '30–40 min', focus: 'Pump / Volume',
+    exs: [
+      { name: 'Standard Push-Ups', sets: 3, reps: '15–20', rest: '60 sec', tip: 'Slow and controlled today — 3 seconds down, 1 second pause at the bottom, explode up. Quality over speed.' },
+      { name: 'Pike Push-Ups', sets: 3, reps: '12–15', rest: '60 sec', tip: 'Rest less than normal today — keep blood in the shoulders. Pump day.' },
+      { name: 'Wide Push-Ups', sets: 3, reps: '15', rest: '60 sec', tip: 'Hands wide, lower slow, push fast. Pairs well with diamond push-ups as a superset.' },
+      { name: 'Diamond Push-Ups', sets: 3, reps: '10–12', rest: '60 sec', tip: 'After your last set, drop your knees and squeeze out more reps — drop set. Full tricep exhaust.' },
+      { name: 'Chair Dips Burnout', sets: 3, reps: 'Max reps', rest: '45 sec', tip: 'Hands on chair edge, back close to chair. Max reps each set. End every Friday with this.' },
+    ],
+    tips: [
+      { icon: '🏁', title: 'Last push day — leave nothing', body: 'Three push days in a week with bodyweight only. The burnout at the end is your benchmark. Track how many dips and push-ups you get — if those numbers go up each week, you\'re getting stronger.' },
+    ]
+  },
+  6: { // Saturday - Legs
+    name: 'LEGS', type: 'Legs',
+    muscles: 'Quads · Hamstrings · Glutes · Calves',
+    dur: '35–45 min', focus: 'Strength + Size',
+    exs: [
+      { name: 'Bodyweight Squats', sets: 4, reps: '20–25', rest: '90 sec', tip: 'Feet shoulder-width, toes slightly out. Sit back and down like you\'re sitting into a chair. Thighs parallel or below. Chest up the whole time.' },
+      { name: 'Bulgarian Split Squats', sets: 3, reps: '10–12 each', rest: '90 sec', tip: 'Back foot on a chair or bed, front foot forward. Lower your back knee toward the floor, drive through your front heel to stand. Keep front shin vertical.' },
+      { name: 'Reverse Lunges', sets: 3, reps: '12 each', rest: '75 sec', tip: 'Step one foot back, lower back knee toward the floor, return to standing. Easier on knees than forward lunges. Alternate legs each rep.' },
+      { name: 'Glute Bridges', sets: 3, reps: '20–25', rest: '60 sec', tip: 'Lie on your back, feet flat on the floor. Drive hips toward the ceiling and squeeze glutes hard at the top. Hold 1 second. Elevate feet on a chair to make it harder.' },
+      { name: 'Calf Raises', sets: 4, reps: '20–25', rest: '60 sec', tip: 'Stand on the edge of a stair or raised surface, heels hanging off. Lower heels below the step, then rise up as high as possible. Slow on the way down.' },
+    ],
+    tips: [
+      { icon: '🦵', title: 'Bulgarian split squats will be hard — that\'s the point', body: 'Even bodyweight, these are brutal if you do them right. Full range of motion, back knee close to the floor. These alone will make your quads and glutes sore.' },
+      { icon: '🚶', title: 'Use stairs for calf raises', body: 'Any step works — hotel stairs, a curb, whatever you can find. The key is hanging your heel off so you get a full stretch at the bottom.' },
+    ]
+  },
+  0: null // Sunday = rest
+};
+
 const PLAN_DAY_NAMES = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
 const PLAN_DAY_ABBR = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
 const PLAN_TYPES = ['Rest','Push A','Pull A','Push B','Pull B','Push C','Legs'];
 
 let activePlanDay = new Date().getDay();
+let planMode = 'gym'; // 'gym' or 'vacation'
+let todayMode = 'gym'; // mode for the Today tab
+
+function setPlanMode(mode) {
+  planMode = mode;
+  document.getElementById('plan-btn-gym').classList.toggle('active', mode === 'gym');
+  document.getElementById('plan-btn-vacation').classList.toggle('active', mode === 'vacation');
+  renderPlanTab();
+}
 
 function renderPlanTab() {
   const todayDOW = new Date().getDay();
+  const details = planMode === 'vacation' ? null : PLAN_DETAILS;
 
   // Week strip
   let strip = `<div class="plan-week-strip">`;
@@ -1568,8 +1862,7 @@ function renderPlanTab() {
     if (isRest) cls += ' rest-pill';
     if (isToday) cls += ' today-pill';
     if (isActive) cls += ' active';
-    const onclick = `onclick="selectPlanDay(${i})"`;
-    strip += `<div class="${cls}" ${onclick}>
+    strip += `<div class="${cls}" onclick="selectPlanDay(${i})">
       <div class="plan-pill-abbr">${PLAN_DAY_ABBR[i]}</div>
       <div class="plan-pill-type">${PLAN_TYPES[i]}</div>
       <div class="plan-pill-dot"></div>
@@ -1579,6 +1872,11 @@ function renderPlanTab() {
   document.getElementById('plan-week-strip').innerHTML = strip;
 
   // Detail
+  if (planMode === 'vacation') {
+    renderPlanDetailVacation(todayDOW);
+    return;
+  }
+
   const detail = PLAN_DETAILS[activePlanDay];
   if (!detail) {
     document.getElementById('plan-day-detail').innerHTML = `
@@ -1589,7 +1887,6 @@ function renderPlanTab() {
     return;
   }
 
-  // Rest day (Sunday) — has tips but no exercises
   if (!detail.exs.length) {
     let html = `<div class="plan-rest-card" style="margin-bottom:16px">
       <h2>REST DAY</h2>
@@ -1633,6 +1930,50 @@ function renderPlanTab() {
   document.getElementById('plan-day-detail').innerHTML = html;
 }
 
+function renderPlanDetailVacation(todayDOW) {
+  const vac = VAC_PLAN[activePlanDay];
+  const isToday = activePlanDay === todayDOW;
+
+  if (!vac) {
+    // Rest day
+    document.getElementById('plan-day-detail').innerHTML = `
+      <div class="plan-rest-card">
+        <h2>REST DAY 🏖️</h2>
+        <p>Go enjoy your vacation. Walk, stretch, eat well. You earned it.</p>
+      </div>`;
+    return;
+  }
+
+  let html = `<div class="plan-detail-card">
+    <div class="plan-detail-header">
+      <div class="plan-detail-day-label">${PLAN_DAY_NAMES[activePlanDay]}${isToday ? ' — TODAY' : ''}</div>
+      <div class="plan-detail-title">${vac.name} <span class="vac-badge">VACATION</span></div>
+      <div class="plan-detail-muscles">${vac.muscles}</div>
+      <div class="plan-detail-badges">
+        <span class="badge badge-green">⏱ ${vac.dur}</span>
+        <span class="badge badge-blue">${vac.focus}</span>
+        <span class="badge badge-green">${vac.exs.length} exercises</span>
+      </div>
+    </div>`;
+
+  vac.exs.forEach((ex) => {
+    html += `<div class="plan-ex-row">
+      <div class="plan-ex-left">
+        <div class="plan-ex-name">${ex.name}</div>
+        <div class="plan-ex-detail">${ex.reps} reps · ${ex.rest} rest<br><em style="color:#444">${ex.tip}</em></div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div class="plan-ex-sets">${ex.sets}</div>
+        <div class="plan-ex-sets-label">sets</div>
+      </div>
+    </div>`;
+  });
+
+  html += `</div>`;
+  html += renderTipsHTML(vac.tips);
+  document.getElementById('plan-day-detail').innerHTML = html;
+}
+
 function renderTipsHTML(tips) {
   if (!tips || !tips.length) return '';
   let html = `<div class="tips-section">
@@ -1661,7 +2002,8 @@ function exportData() {
     version: 1,
     exported: new Date().toISOString(),
     liftData: getStorage(),
-    weightData: getWeightData()
+    weightData: getWeightData(),
+    vacData: getVacStorage()
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
